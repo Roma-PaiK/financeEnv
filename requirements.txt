@@ -1,0 +1,6 @@
+pydantic>=2.0
+fastapi
+uvicorn[standard]
+openai
+python-dotenv
+huggingface_hub

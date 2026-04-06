@@ -1,0 +1,19 @@
+name: FinanceEnv
+version: 1.0.0
+description: >
+  Multi-source personal finance environment. Trains agents to categorize
+  transactions, reconcile cross-source duplicates, and build realistic budgets.
+tasks:
+  - id: task1
+    name: Transaction Categorisation
+    difficulty: easy
+    max_steps: 25
+  - id: task2
+    name: Cross-Source Reconciliation
+    difficulty: medium
+    max_steps: 40
+  - id: task3
+    name: Forward Budget Planning
+    difficulty: hard
+    max_steps: 60
+entry_point: app.py

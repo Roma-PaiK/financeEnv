@@ -1,0 +1,182 @@
+[
+  {
+    "id": "txn_sbi_001",
+    "source": "SBI_SAVINGS",
+    "description": "SALARY CREDIT JAN 2024 INFOSYS LTD",
+    "amount": -85000.0,
+    "date": "2024-01-01",
+    "correct_category": "Savings & Investment",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_002",
+    "source": "SBI_SAVINGS",
+    "description": "NEFT TO SHARMA PROPERTIES/RENT JAN",
+    "amount": 25000.0,
+    "date": "2024-01-02",
+    "correct_category": "Utilities & Bills",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_003",
+    "source": "SBI_SAVINGS",
+    "description": "EMI HDFC AUTO LOAN JAN2024",
+    "amount": 12000.0,
+    "date": "2024-01-05",
+    "correct_category": "EMI & Loan Repayment",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_004",
+    "source": "SBI_SAVINGS",
+    "description": "TATA POWER ELECTRICITY BILL JAN",
+    "amount": 1840.0,
+    "date": "2024-01-06",
+    "correct_category": "Utilities & Bills",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_005",
+    "source": "SBI_SAVINGS",
+    "description": "ZOMATO*ORDER 8829 MUMBAI",
+    "amount": 645.0,
+    "date": "2024-01-07",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_006",
+    "source": "SBI_SAVINGS",
+    "description": "MUMBAI METRO RAIL CARD TOPUP",
+    "amount": 500.0,
+    "date": "2024-01-08",
+    "correct_category": "Transport & Commute",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_007",
+    "source": "SBI_SAVINGS",
+    "description": "APOLLO PHARMACY BANDRA",
+    "amount": 430.0,
+    "date": "2024-01-09",
+    "correct_category": "Healthcare",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_008",
+    "source": "SBI_SAVINGS",
+    "description": "SWIGGY*ORDER 2210 MH",
+    "amount": 320.0,
+    "date": "2024-01-10",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_009",
+    "source": "SBI_SAVINGS",
+    "description": "AMAZON SELLER SERVICES PVT LTD",
+    "amount": 2199.0,
+    "date": "2024-01-11",
+    "correct_category": "Shopping & Apparel",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_010",
+    "source": "SBI_SAVINGS",
+    "description": "NETFLIX SERVICES INDIA",
+    "amount": 649.0,
+    "date": "2024-01-12",
+    "correct_category": "Entertainment & Subscriptions",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_011",
+    "source": "SBI_SAVINGS",
+    "description": "OLA CABS RIDE MUMBAI",
+    "amount": 285.0,
+    "date": "2024-01-13",
+    "correct_category": "Transport & Commute",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_012",
+    "source": "SBI_SAVINGS",
+    "description": "DMART READY GROCERIES",
+    "amount": 3450.0,
+    "date": "2024-01-14",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_013",
+    "source": "SBI_SAVINGS",
+    "description": "DR MEHTA MULTISPECIALITY CLINIC",
+    "amount": 800.0,
+    "date": "2024-01-16",
+    "correct_category": "Healthcare",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_014",
+    "source": "SBI_SAVINGS",
+    "description": "MYNTRA DESIGNS PVT LTD",
+    "amount": 1750.0,
+    "date": "2024-01-17",
+    "correct_category": "Shopping & Apparel",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_015",
+    "source": "SBI_SAVINGS",
+    "description": "AIRTEL BROADBAND BILL JAN",
+    "amount": 999.0,
+    "date": "2024-01-18",
+    "correct_category": "Utilities & Bills",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_016",
+    "source": "SBI_SAVINGS",
+    "description": "MIRAE ASSET SIP AUTO DEBIT",
+    "amount": 5000.0,
+    "date": "2024-01-19",
+    "correct_category": "Savings & Investment",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_017",
+    "source": "SBI_SAVINGS",
+    "description": "ATM CASH WDL SBI BANDRA BR",
+    "amount": 4000.0,
+    "date": "2024-01-20",
+    "correct_category": "Other",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_018",
+    "source": "SBI_SAVINGS",
+    "description": "INDIAN OIL PETROL PUMP ANDHERI",
+    "amount": 1200.0,
+    "date": "2024-01-21",
+    "correct_category": "Transport & Commute",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_019",
+    "source": "SBI_SAVINGS",
+    "description": "SPOTIFY INDIA SUBSCRIPTION",
+    "amount": 119.0,
+    "date": "2024-01-22",
+    "correct_category": "Entertainment & Subscriptions",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "txn_sbi_020",
+    "source": "SBI_SAVINGS",
+    "description": "PVR CINEMAS INFINITY MALL",
+    "amount": 760.0,
+    "date": "2024-01-25",
+    "correct_category": "Entertainment & Subscriptions",
+    "is_cc_settlement": false
+  }
+]

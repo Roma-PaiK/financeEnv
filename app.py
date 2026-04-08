@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Body, FastAPI, HTTPException
 from pydantic import BaseModel
 
 from finance_env import FinanceEnv
@@ -34,9 +34,9 @@ class StepResponse(BaseModel):
 
 
 @app.post("/reset", response_model=Observation)
-def reset(req: ResetRequest) -> Observation:
+def reset(request: ResetRequest = Body(...)) -> Observation:
     try:
-        return env.reset(req.task_id)
+        return env.reset(request.task_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

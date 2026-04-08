@@ -19,6 +19,13 @@ CATEGORIES_FILE = Path(__file__).parent.parent / "data" / "categories.json"
 MAX_TRANSACTIONS = 20
 EFFICIENCY_STEP_THRESHOLD = 22  # must finalize before this step count to earn bonus
 
+EPSILON = 1e-6  # Clamp scores to exclusive interval (EPSILON, 1 - EPSILON)
+
+
+def _clamp_score(value: float) -> float:
+    """Clamp score to exclusive open interval (EPSILON, 1 - EPSILON)."""
+    return min(1.0 - EPSILON, max(EPSILON, value))
+
 # Hierarchical parent for near-miss scoring.
 # If the agent submits parent_category[correct] instead of correct → +0.015 partial.
 PARENT_CATEGORY: Dict[str, str | None] = {
@@ -96,13 +103,19 @@ def grade_categorize(
     # Exact match
     if category == correct:
         correct_count = len(addressed_ids) + 1  # +1 for this action
-        partial = {"correct_labels": correct_count / MAX_TRANSACTIONS, "efficiency": 0.0}
+        partial = {
+            "correct_labels": _clamp_score(correct_count / MAX_TRANSACTIONS),
+            "efficiency": _clamp_score(0.0),
+        }
         return 0.040, partial, "Correct.", False
 
     # Near-miss: agent submitted the parent of the correct category
     if category == PARENT_CATEGORY.get(correct):
         correct_count = len(addressed_ids)
-        partial = {"correct_labels": correct_count / MAX_TRANSACTIONS, "efficiency": 0.0}
+        partial = {
+            "correct_labels": _clamp_score(correct_count / MAX_TRANSACTIONS),
+            "efficiency": _clamp_score(0.0),
+        }
         return (
             0.015,
             partial,
@@ -112,7 +125,10 @@ def grade_categorize(
 
     # Wrong
     correct_count = len(addressed_ids)
-    partial = {"correct_labels": correct_count / MAX_TRANSACTIONS, "efficiency": 0.0}
+    partial = {
+        "correct_labels": _clamp_score(correct_count / MAX_TRANSACTIONS),
+        "efficiency": _clamp_score(0.0),
+    }
     return (
         0.0,
         partial,
@@ -126,7 +142,7 @@ def grade_finalize(
     step_count: int,
     correct_count: int,
 ) -> Tuple[float, Dict[str, float], str, bool]:
-    """Grade a 'finalize' action. Always ends the episode."""
+    """Grade a 'finalize' action. Always ends the epiode."""
     _ensure_loaded()
 
     score_delta = 0.050  # terminal bonus always awarded
@@ -137,8 +153,8 @@ def grade_finalize(
         score_delta += efficiency
 
     partial: Dict[str, float] = {
-        "correct_labels": correct_count / MAX_TRANSACTIONS,
-        "efficiency": efficiency,
+        "correct_labels": _clamp_score(correct_count / MAX_TRANSACTIONS),
+        "efficiency": _clamp_score(efficiency),
     }
 
     addressed = len(addressed_ids)

@@ -1,21 +1,27 @@
 """
-End-to-end HTTP test for Task 1 — hits the live FastAPI server.
+End-to-end HTTP test for Task 1 — hits the FastAPI server.
 
-Usage:
-    # In one terminal: uvicorn app:app --port 7860
-    # In another:      python baseline/test_e2e_task1.py
+Usage (default — HF Space):
+    python baseline/test_e2e_task1.py
+
+Usage (local dev):
+    BASE_URL=http://localhost:7860 python baseline/test_e2e_task1.py
+
+Environment variables:
+    BASE_URL  Override the server URL (default: HF Space)
 """
 
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
 import urllib.request
 import urllib.error
 
-BASE_URL = "http://localhost:7860"
+BASE_URL = os.getenv("BASE_URL", "https://romapai-finance-env-india.hf.space").rstrip("/")
 
 
 def post(path: str, body: dict) -> dict:

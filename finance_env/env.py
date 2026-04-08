@@ -115,7 +115,7 @@ class FinanceEnv:
             return self._build_observation(), reward, False, {}
 
         # --- Universal penalty: repeated transaction (3+ times) ---
-        if action.action_type == "categorize":
+        if action.action_type in ("categorize", "reconcile"):
             txn_id = action.payload.get("transaction_id", "")
             repeat_count = self._state.addressed_ids.count(txn_id)
             if repeat_count >= 2:
@@ -132,8 +132,8 @@ class FinanceEnv:
         # --- Dispatch to task grader ---
         score_delta, partial_scores, feedback, done = self._dispatch(action)
 
-        # Track addressed IDs and correct count (task1)
-        # Only mark as addressed if the action was not an invalid-category penalty
+        # Track addressed IDs and correct count
+        # Task 1: categorize actions
         if action.action_type == "categorize" and score_delta != -0.010:
             txn_id = action.payload.get("transaction_id", "")
             if txn_id and txn_id not in self._state.addressed_ids:
@@ -152,6 +152,14 @@ class FinanceEnv:
                 partial_scores.update(fin_partial)
                 feedback += " " + fin_feedback
 
+        # Task 2: reconcile actions
+        if action.action_type == "reconcile" and score_delta not in (-0.010, -0.020):
+            txn_id = action.payload.get("transaction_id", "")
+            if txn_id and txn_id not in self._state.addressed_ids:
+                self._state.addressed_ids.append(txn_id)
+                if score_delta == 0.060:
+                    self._correct_count += 1
+
         reward = self._make_reward(score_delta, partial_scores, feedback, done)
         self._state.step_count += 1
         self._state.done = done
@@ -169,6 +177,8 @@ class FinanceEnv:
     def _dispatch(self, action: Action) -> Tuple[float, Dict[str, Any], str, bool]:
         if self._task_id == "task1":
             return self._dispatch_task1(action)
+        elif self._task_id == "task2":
+            return self._dispatch_task2(action)
         raise NotImplementedError(f"{self._task_id} grader not yet implemented.")
 
     def _dispatch_task1(self, action: Action) -> Tuple[float, Dict[str, Any], str, bool]:
@@ -187,6 +197,25 @@ class FinanceEnv:
         # Should never reach here — caught by legal action check above
         raise ValueError(f"Unexpected action_type '{action.action_type}' in task1 dispatch.")
 
+    def _dispatch_task2(self, action: Action) -> Tuple[float, Dict[str, Any], str, bool]:
+        from finance_env.tasks.task2_reconcile import (
+            grade_reconcile,
+            grade_query,
+            grade_finalize,
+        )
+
+        if action.action_type == "reconcile":
+            return grade_reconcile(action.payload, self._state.addressed_ids, self._correct_count)
+
+        if action.action_type == "query":
+            return grade_query(action.payload, self._state.addressed_ids, self._correct_count)
+
+        if action.action_type == "finalize":
+            return grade_finalize(action.payload, self._state.addressed_ids, self._correct_count)
+
+        # Should never reach here
+        raise ValueError(f"Unexpected action_type '{action.action_type}' in task2 dispatch.")
+
     def _make_reward(
         self,
         score_delta: float,
@@ -194,7 +223,9 @@ class FinanceEnv:
         feedback: str,
         done: bool,
     ) -> Reward:
-        new_cumulative = min(1.0, max(0.0, self._state.cumulative_score + score_delta))
+        # Clamp cumulative_score to exclusive interval (1e-6, 1 - 1e-6)
+        eps = 1e-6
+        new_cumulative = min(1.0 - eps, max(eps, self._state.cumulative_score + score_delta))
         self._state.cumulative_score = new_cumulative
         return Reward(
             score=score_delta,

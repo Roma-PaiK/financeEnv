@@ -1,10 +1,24 @@
 """
-Baseline inference script — runs an OpenAI agent through all tasks.
+Baseline inference script — runs an agent through all tasks.
 
-Usage:
+Supports two LLM providers:
+  1. OpenAI (default, for submission)
+  2. Ollama (local development)
+
+Usage (OpenAI — submission):
     OPENAI_API_KEY=sk-... python baseline/run_baseline.py
 
-Produces deterministic scores: temperature=0, seed=42, static data.
+Usage (Ollama — local dev):
+    LLM_PROVIDER=ollama OLLAMA_MODEL=mistral python baseline/run_baseline.py
+
+Environment variables:
+    LLM_PROVIDER        "openai" (default) or "ollama"
+    OPENAI_API_KEY      Required if LLM_PROVIDER=openai
+    OLLAMA_BASE_URL     Base URL for Ollama (default: http://localhost:11434)
+    OLLAMA_MODEL        Model name for Ollama (default: mistral)
+
+Produces deterministic scores with OpenAI: temperature=0, seed=42, static data.
+Note: Ollama may produce different results due to lack of seed control.
 """
 
 from __future__ import annotations
@@ -14,6 +28,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -22,9 +37,14 @@ from openai import OpenAI
 from finance_env import FinanceEnv
 from finance_env.models import Action
 
+# Configuration
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").lower()
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+
 TASKS = [
     ("task1", "Transaction Categorisation", "Easy"),
-    # ("task2", "Reconciliation",             "Medium"),  # not yet implemented
+    ("task2", "Reconciliation",             "Medium"),
     # ("task3", "Budget Planning",             "Hard"),   # not yet implemented
 ]
 
@@ -39,21 +59,18 @@ Action schema:
   "confidence": 0.0–1.0
 }
 
-For Task 1, use action_type "categorize" with payload:
-  { "transaction_id": "<id>", "category": "<one of the 9 categories below>" }
+=== TASK 1: Categorisation ===
+Use action_type "categorize" with payload: { "transaction_id": "<id>", "category": "<category>" }
+Valid categories (use exactly):
+  "Food & Dining" | "Transport & Commute" | "Utilities & Bills" | "EMI & Loan Repayment"
+  "Entertainment & Subscriptions" | "Healthcare" | "Shopping & Apparel" | "Savings & Investment" | "Other"
+Then submit "finalize" with empty payload {}.
 
-The ONLY valid category strings are (use exactly as written):
-  "Food & Dining"
-  "Transport & Commute"
-  "Utilities & Bills"
-  "EMI & Loan Repayment"
-  "Entertainment & Subscriptions"
-  "Healthcare"
-  "Shopping & Apparel"
-  "Savings & Investment"
-  "Other"
-
-When all transactions are categorized, submit action_type "finalize" with an empty payload {}.
+=== TASK 2: Reconciliation ===
+Identify duplicate/settlement rows. Use:
+  "reconcile": { "transaction_id": "<id>", "classification": "genuine_spend" | "cc_settlement" | "internal_transfer" | "refund" }
+  "query": { "query_type": "merchant" | "date_range", "value": "<merchant_substring or YYYY-MM-DD:YYYY-MM-DD>" }
+  "finalize": { "reconciled_totals": { "2024-01": { "Food & Dining": float, ... }, ... }, "excluded_ids": [<cc_settlement_ids>] }
 
 Respond ONLY with a valid JSON object. No prose, no markdown fences.
 """
@@ -77,16 +94,18 @@ def build_user_message(obs_dict: dict, last_feedback: str | None) -> str:
     return "\n".join(lines)
 
 
-def run_task(client: OpenAI, env: FinanceEnv, task_id: str) -> float:
+def run_task(client: OpenAI, env: FinanceEnv, task_id: str, provider: str, model: str) -> float:
     obs = env.reset(task_id)
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     last_feedback: str | None = None
     final_score = 0.0
     total_tokens_in = 0
     total_tokens_out = 0
+    max_steps = {"task1": 25, "task2": 40, "task3": 60}.get(task_id, 25)
 
     print(f"\n{'=' * 70}")
-    print(f"  Running {task_id.upper()}  |  {len(obs.transactions)} transactions  |  max_steps={25}")
+    print(f"  Running {task_id.upper()}  |  {len(obs.transactions)} transactions  |  max_steps={max_steps}")
+    print(f"  LLM: {provider.upper()} / {model}")
     print(f"{'=' * 70}")
 
     while True:
@@ -94,17 +113,24 @@ def run_task(client: OpenAI, env: FinanceEnv, task_id: str) -> float:
         user_msg = build_user_message(obs_dict, last_feedback)
         messages.append({"role": "user", "content": user_msg})
 
-        print(f"\n  [step {obs.step_count + 1}] Calling OpenAI API...", end="", flush=True)
+        provider_name = "Ollama" if provider == "ollama" else "OpenAI"
+        print(f"\n  [step {obs.step_count + 1}] Calling {provider_name}...", end="", flush=True)
 
         for attempt in range(5):
             try:
-                response = client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=messages,
-                    response_format={"type": "json_object"},
-                    temperature=0,
-                    seed=42,
-                )
+                # Build request kwargs based on provider
+                request_kwargs = {
+                    "model": model,
+                    "messages": messages,
+                    "temperature": 0,
+                }
+
+                # OpenAI-specific options
+                if provider == "openai":
+                    request_kwargs["response_format"] = {"type": "json_object"}
+                    request_kwargs["seed"] = 42
+
+                response = client.chat.completions.create(**request_kwargs)
                 break
             except Exception as e:
                 if "rate_limit" in str(e).lower() or "429" in str(e):
@@ -115,15 +141,16 @@ def run_task(client: OpenAI, env: FinanceEnv, task_id: str) -> float:
                     raise
 
         usage = response.usage
-        tokens_in  = usage.prompt_tokens
-        tokens_out = usage.completion_tokens
+        tokens_in  = usage.prompt_tokens if usage else 0
+        tokens_out = usage.completion_tokens if usage else 0
         total_tokens_in  += tokens_in
         total_tokens_out += tokens_out
 
         raw_json = response.choices[0].message.content
         messages.append({"role": "assistant", "content": raw_json})
 
-        print(f" done  (in={tokens_in} out={tokens_out})")
+        token_info = f"in={tokens_in} out={tokens_out}" if tokens_in or tokens_out else "no token count"
+        print(f" done  ({token_info})")
         print(f"  Model response: {raw_json}")
 
         try:
@@ -156,24 +183,52 @@ def run_task(client: OpenAI, env: FinanceEnv, task_id: str) -> float:
     print(f"\n{'=' * 70}")
     print(f"  EPISODE COMPLETE")
     print(f"  Final score   : {final_score:.3f} / 1.000")
-    print(f"  Total tokens  : {total_tokens_in} in / {total_tokens_out} out  "
-          f"(total={total_tokens_in + total_tokens_out})")
+    if total_tokens_in or total_tokens_out:
+        print(f"  Total tokens  : {total_tokens_in} in / {total_tokens_out} out  "
+              f"(total={total_tokens_in + total_tokens_out})")
     print(f"{'=' * 70}")
 
     return final_score
 
 
 def main() -> None:
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise ValueError("OPENAI_API_KEY is not set. Run: export OPENAI_API_KEY=sk-...")
+    # Validate and initialize LLM client
+    if LLM_PROVIDER == "openai":
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError(
+                "LLM_PROVIDER=openai but OPENAI_API_KEY is not set.\n"
+                "Run: export OPENAI_API_KEY=sk-... && python baseline/run_baseline.py"
+            )
+        client = OpenAI(api_key=api_key)
+        model = "gpt-4o"
+        print(f"Using OpenAI API (model: {model})")
 
-    client = OpenAI(api_key=api_key)
+    elif LLM_PROVIDER == "ollama":
+        # Ollama uses OpenAI-compatible API
+        client = OpenAI(
+            api_key="dummy",  # Ollama doesn't require a real key
+            base_url=OLLAMA_BASE_URL.rstrip("/") + "/v1",
+        )
+        model = OLLAMA_MODEL
+        print(f"Using Ollama (base_url: {OLLAMA_BASE_URL}, model: {model})")
+        # Test connection
+        try:
+            client.models.list()
+        except Exception as e:
+            raise ValueError(
+                f"Cannot connect to Ollama at {OLLAMA_BASE_URL}. "
+                f"Make sure Ollama is running: {e}"
+            )
+
+    else:
+        raise ValueError(f"LLM_PROVIDER must be 'openai' or 'ollama', got: {LLM_PROVIDER}")
+
     env = FinanceEnv()
     results = []
 
     for task_id, description, difficulty in TASKS:
-        score = run_task(client, env, task_id)
+        score = run_task(client, env, task_id, LLM_PROVIDER, model)
         results.append((task_id, description, difficulty, score))
 
     print(f"\n{'=' * 70}")

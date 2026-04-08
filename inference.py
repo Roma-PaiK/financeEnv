@@ -41,7 +41,8 @@ if _env_file.exists():
 # ---------------------------------------------------------------------------
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME   = os.getenv("MODEL_NAME",   "gpt-4o")
-API_KEY      = os.getenv("OPENAI_API_KEY") or os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Mandatory for OpenAI API calls
+HF_TOKEN     = os.getenv("HF_TOKEN")     # Optional: for HF Space auth if needed
 SPACE_URL    = os.getenv("SPACE_URL",    "https://romapai-finance-env-india.hf.space").rstrip("/")
 TASK_NAME    = os.getenv("TASK_NAME",    "task1")
 BENCHMARK    = "finance_env_india"
@@ -86,18 +87,48 @@ SYSTEM_PROMPT_TASK1 = textwrap.dedent("""
 """).strip()
 
 # Task 2 — Cross-source deduplication & reconciliation
-# NOTE: Unlock when task2 grader is implemented.
-# Key differences from Task 1:
-#   - action_types: "reconcile", "query", "finalize" ("categorize" is illegal here)
-#   - "reconcile" payload: {transaction_id, classification, linked_source}
-#     classifications: "genuine_spend" | "cc_settlement" | "internal_transfer" | "refund"
-#   - "query" payload: {query_type: "merchant"|"date_range", value: str}
-#   - "finalize" payload: {reconciled_totals: {month: {category: float}}, excluded_ids: [str]}
-#   - 3 months of data across HDFC_CC, SBI_SAVINGS, PAYTM_UPI
-#   - Scoring: classification accuracy +0.060 correct / -0.040 wrong; F1 on excluded_ids; totals accuracy
 SYSTEM_PROMPT_TASK2 = textwrap.dedent("""
-    You are a financial intelligence agent for FinanceEnv Task 2.
-    [TASK 2 PROMPT — implement when task2 grader is ready]
+    You are a financial intelligence agent for FinanceEnv Task 2: Cross-Source Reconciliation.
+
+    OBJECTIVE:
+    You are given 3 months of transactions across 3 sources: HDFC Credit Card, SBI Savings, Paytm UPI.
+    Identify duplicate rows (primarily: SBI rows that are CC bill payments, which settle HDFC CC charges).
+    Classify each transaction correctly and submit reconciled monthly spend totals per category.
+
+    THE CORE PROBLEM:
+    When the SBI account pays the HDFC CC bill (e.g., "HDFC CREDIT CARD PAYMENT ₹18,450" in SBI),
+    this row is NOT a spend event — it's the settlement of previous CC charges already in the HDFC feed.
+    Counting both the CC charges AND the SBI payment inflates total spend by ₹18,450.
+
+    ACTIONS:
+    1. "query": Explore transactions by merchant name or date range to understand the data.
+       Payload: {"query_type": "merchant"|"date_range", "value": "<substring>"|"YYYY-MM-DD:YYYY-MM-DD"}
+       Score: +0.010 if the query reveals unresolved duplicates, -0.010 if all are already resolved.
+
+    2. "reconcile": Classify a single transaction.
+       Payload: {"transaction_id": "<id>", "classification": "genuine_spend"|"cc_settlement"|"internal_transfer"|"refund"}
+       Score: +0.060 if correct, -0.040 if wrong.
+
+    3. "finalize": Submit the complete reconciliation. Ends the episode.
+       Payload: {
+           "excluded_ids": ["t2s05", "t2s08", ...],  # IDs classified as non-spend (settlements, transfers)
+           "reconciled_totals": {
+               "2024-01": {"Food & Dining": 1330.0, "Transport & Commute": 2255.0, ...},
+               "2024-02": {...},
+               "2024-03": {...}
+           }
+       }
+       Scoring:
+       - Exclusion F1 (precision+recall on duplicate detection): F1 × 0.200
+       - Totals accuracy: up to 0.180 (per-category accuracy across all months)
+
+    STRATEGY:
+    - Start with "query" to understand merchant patterns and identify obvious duplicates.
+    - Use "reconcile" to systematically classify each unique transaction.
+    - Build accurate reconciled_totals by summing genuine_spend transactions per category per month.
+    - Use "finalize" only when confident in classifications and totals.
+
+    Respond ONLY with a valid JSON object. No prose, no markdown fences.
 """).strip()
 
 # Task 3 — Forward budget planning with life event shock
@@ -214,10 +245,10 @@ def call_llm(client: OpenAI, messages: list) -> str:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    if not API_KEY:
-        raise ValueError("HF_TOKEN (or OPENAI_API_KEY) is not set.")
+    if not OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY is not set. Required for OpenAI API calls.")
 
-    client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+    client = OpenAI(base_url=API_BASE_URL, api_key=OPENAI_API_KEY)
 
     system_prompt = SYSTEM_PROMPTS.get(TASK_NAME, SYSTEM_PROMPT_TASK1)
     max_steps     = MAX_STEPS.get(TASK_NAME, 25)

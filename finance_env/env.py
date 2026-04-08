@@ -25,9 +25,9 @@ TASK_DATA: Dict[str, List[str]] = {
 }
 
 MAX_STEPS: Dict[str, int] = {
-    "task1": 25,
-    "task2": 40,
-    "task3": 60,
+    "task1": 5,
+    "task2": 6,
+    "task3": 7,
 }
 
 LEGAL_ACTIONS: Dict[str, List[str]] = {
@@ -47,8 +47,11 @@ TASK_CONTEXT: Dict[str, str] = {
         "Identify and flag duplicate/settlement rows, then submit reconciled monthly category totals."
     ),
     "task3": (
-        "You are given 2 months of pre-reconciled spend history and financial goals. "
-        "Build a realistic monthly budget across all 9 categories within ₹85,000 income."
+        "You are given 2 months of pre-reconciled spend history for Ananya Sharma (Jan–Feb 2024). "
+        "Financial goals: Save ₹8,000 this month. Reduce Food & Dining by 15% vs last month. "
+        "Maintain zero deficit across all categories. Fixed EMI: ₹12,000. Income: ₹85,000/month. "
+        "Use 'query' to explore category history, 'set_budget' to allocate per category, "
+        "then 'finalize' with all 9 categories to lock the plan."
     ),
 }
 
@@ -71,7 +74,8 @@ class FinanceEnv:
             addressed_ids=[],
             budget_draft={},
         )
-        self._correct_count: int = 0  # task1: tracks exact match count for finalize
+        self._correct_count: int = 0  # task1/task2: tracks exact match count for finalize
+        self._query_count: int = 0    # task3: tracks number of query actions taken
 
     # ------------------------------------------------------------------
     # Public API
@@ -84,6 +88,7 @@ class FinanceEnv:
         self._task_id = task_id
         self._raw_transactions = self._load_transactions(task_id)
         self._correct_count = 0
+        self._query_count = 0
 
         self._state = State(
             task_id=task_id,
@@ -179,6 +184,8 @@ class FinanceEnv:
             return self._dispatch_task1(action)
         elif self._task_id == "task2":
             return self._dispatch_task2(action)
+        elif self._task_id == "task3":
+            return self._dispatch_task3(action)
         raise NotImplementedError(f"{self._task_id} grader not yet implemented.")
 
     def _dispatch_task1(self, action: Action) -> Tuple[float, Dict[str, Any], str, bool]:
@@ -216,6 +223,23 @@ class FinanceEnv:
         # Should never reach here
         raise ValueError(f"Unexpected action_type '{action.action_type}' in task2 dispatch.")
 
+    def _dispatch_task3(self, action: Action) -> Tuple[float, Dict[str, Any], str, bool]:
+        from finance_env.tasks.task3_budget import grade_set_budget, grade_query, grade_finalize
+
+        if action.action_type == "set_budget":
+            # grade_set_budget mutates _state.budget_draft in place
+            return grade_set_budget(action.payload, self._state.budget_draft)
+
+        if action.action_type == "query":
+            self._query_count += 1
+            return grade_query(action.payload, self._state.budget_draft)
+
+        if action.action_type == "finalize":
+            return grade_finalize(action.payload, self._state.budget_draft, self._query_count)
+
+        # Should never reach here
+        raise ValueError(f"Unexpected action_type '{action.action_type}' in task3 dispatch.")
+
     def _make_reward(
         self,
         score_delta: float,
@@ -249,7 +273,10 @@ class FinanceEnv:
     def _build_observation(self) -> Observation:
         stripped = [Transaction(**_strip_hidden(t)) for t in self._raw_transactions]
         sources = list({t["source"] for t in self._raw_transactions})
-        current_month = self._raw_transactions[0]["date"][:7] if self._raw_transactions else ""
+        current_month = (
+            max(t["date"][:7] for t in self._raw_transactions)
+            if self._raw_transactions else ""
+        )
         balance = 85000.0 - sum(t["amount"] for t in self._raw_transactions if t["amount"] > 0)
 
         return Observation(

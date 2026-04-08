@@ -1,0 +1,12 @@
+{
+  "monthly_income": 85000.0,
+  "savings_goal": 8000.0,
+  "fixed_emi": 12000.0,
+  "goals": [
+    "Save ₹8,000 this month.",
+    "Reduce Food & Dining spend by 15% vs last month.",
+    "Maintain zero deficit across all categories.",
+    "Fixed EMI: ₹12,000 per month."
+  ],
+  "goals_text": "Save ₹8,000 this month. Reduce Food & Dining spend by 15% vs last month. Maintain zero deficit across all categories. Fixed EMI: ₹12,000."
+}

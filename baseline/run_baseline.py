@@ -45,7 +45,7 @@ OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
 TASKS = [
     ("task1", "Transaction Categorisation", "Easy"),
     ("task2", "Reconciliation",             "Medium"),
-    # ("task3", "Budget Planning",             "Hard"),   # not yet implemented
+    ("task3", "Budget Planning",            "Hard"),
 ]
 
 SYSTEM_PROMPT = """\
@@ -71,6 +71,18 @@ Identify duplicate/settlement rows. Use:
   "reconcile": { "transaction_id": "<id>", "classification": "genuine_spend" | "cc_settlement" | "internal_transfer" | "refund" }
   "query": { "query_type": "merchant" | "date_range", "value": "<merchant_substring or YYYY-MM-DD:YYYY-MM-DD>" }
   "finalize": { "reconciled_totals": { "2024-01": { "Food & Dining": float, ... }, ... }, "excluded_ids": [<cc_settlement_ids>] }
+
+=== TASK 3: Budget Planning ===
+You are given 2 months of pre-reconciled spend history. Build a realistic monthly budget for all 9 categories.
+Goals: Save ₹8,000. Reduce Food & Dining by 15% vs last month. Fixed EMI: ₹12,000. Income: ₹85,000.
+Strategy: First use "query" to explore each category's historical spend, then "set_budget" for each category, then "finalize".
+  "query": { "category": "<one of the 9 categories>", "months": ["2024-01", "2024-02"] }
+  "set_budget": { "category": "<category>", "amount": <float> }
+  "finalize": { "budget": { "Food & Dining": float, "Transport & Commute": float, "Utilities & Bills": float,
+                             "EMI & Loan Repayment": float, "Entertainment & Subscriptions": float,
+                             "Healthcare": float, "Shopping & Apparel": float,
+                             "Savings & Investment": float, "Other": float } }
+Rules: budget sum MUST be <= 85000. All 9 categories required. Set "Other" with a buffer for surprises.
 
 Respond ONLY with a valid JSON object. No prose, no markdown fences.
 """

@@ -41,7 +41,7 @@ if _env_file.exists():
 # ---------------------------------------------------------------------------
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
 MODEL_NAME   = os.getenv("MODEL_NAME",   "gpt-4o")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Mandatory for OpenAI API calls
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("HF_TOKEN") or os.getenv("API_KEY")
 HF_TOKEN     = os.getenv("HF_TOKEN")     # Optional: for HF Space auth if needed
 SPACE_URL    = os.getenv("SPACE_URL",    "https://romapai-finance-env-india.hf.space").rstrip("/")
 TASK_NAME    = os.getenv("TASK_NAME",    "task1")

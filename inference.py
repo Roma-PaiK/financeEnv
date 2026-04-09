@@ -39,9 +39,9 @@ if _env_file.exists():
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME   = os.getenv("MODEL_NAME",   "gpt-4o")
-OPENAI_API_KEY = os.getenv("API_KEY") or os.getenv("HF_TOKEN") or os.getenv("OPENAI_API_KEY")
+API_BASE_URL   = os.environ["API_BASE_URL"]   # injected by hackathon evaluator — no default
+MODEL_NAME     = os.getenv("MODEL_NAME", "gpt-4o")
+OPENAI_API_KEY = os.environ["API_KEY"]        # injected by hackathon evaluator — no default
 HF_TOKEN     = os.getenv("HF_TOKEN")     # Optional: for HF Space auth if needed
 SPACE_URL    = os.getenv("SPACE_URL",    "https://romapai-finance-env-india.hf.space").rstrip("/")
 TASK_NAME    = os.getenv("TASK_NAME",    "task1")
@@ -291,8 +291,7 @@ def call_llm(client: OpenAI, messages: list) -> str:
 # ---------------------------------------------------------------------------
 
 def main() -> None:
-    if not OPENAI_API_KEY:
-        raise ValueError("OPENAI_API_KEY is not set. Required for OpenAI API calls.")
+    # API_KEY and API_BASE_URL are mandatory (os.environ[] raises KeyError if missing)
 
     client = OpenAI(base_url=API_BASE_URL, api_key=OPENAI_API_KEY)
 

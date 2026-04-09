@@ -186,33 +186,41 @@ curl -s -X POST http://localhost:7860/step \
 
 ---
 
-## Ollama Inference (local pre-deploy test)
+## Inference Agent (local pre-deploy test)
 
-Runs the full baseline agent locally via Ollama. No server needed — calls `env.py` directly.
+Runs `inference.py` against the local server. `API_KEY` and `API_BASE_URL` are **mandatory** — no defaults.
 
-### All 3 tasks — OpenAI
+### Prerequisites — start the server first
 ```bash
-OPENAI_API_KEY=sk-... .venv/bin/python baseline/run_baseline.py
+.venv/bin/uvicorn app:app --reload --port 7860
 ```
 
-### All 3 tasks — Ollama
+### Task 1
+```bash
+API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task1 \
+  SPACE_URL=http://localhost:7860 .venv/bin/python inference.py
+```
+
+### Task 2
+```bash
+API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task2 \
+  SPACE_URL=http://localhost:7860 .venv/bin/python inference.py
+```
+
+### Task 3
+```bash
+API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task3 \
+  SPACE_URL=http://localhost:7860 .venv/bin/python inference.py
+```
+
+### Baseline agent (calls env.py directly, no server needed)
+```bash
+API_KEY=sk-... .venv/bin/python baseline/run_baseline.py
+```
+
+### Baseline — Ollama
 ```bash
 LLM_PROVIDER=ollama .venv/bin/python baseline/run_baseline.py
-```
-
-### Task 1 only — Ollama
-```bash
-TASK=task1 LLM_PROVIDER=ollama .venv/bin/python baseline/run_baseline.py
-```
-
-### Task 2 only — Ollama
-```bash
-TASK=task2 LLM_PROVIDER=ollama .venv/bin/python baseline/run_baseline.py
-```
-
-### Task 3 only — Ollama
-```bash
-TASK=task3 LLM_PROVIDER=ollama .venv/bin/python baseline/run_baseline.py
 ```
 
 ---

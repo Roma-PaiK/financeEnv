@@ -27,6 +27,32 @@ https://romapai-finance-env-india.hf.space/docs
 
 ---
 
+## Run inference.py Against HF Space
+
+`API_KEY` and `API_BASE_URL` are **mandatory** — injected by the hackathon evaluator, or set manually for local testing against the deployed space.
+
+### Task 1
+```bash
+API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task1 \
+  SPACE_URL=https://romapai-finance-env-india.hf.space .venv/bin/python inference.py
+```
+
+### Task 2
+```bash
+API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task2 \
+  SPACE_URL=https://romapai-finance-env-india.hf.space .venv/bin/python inference.py
+```
+
+### Task 3
+```bash
+API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task3 \
+  SPACE_URL=https://romapai-finance-env-india.hf.space .venv/bin/python inference.py
+```
+
+> **Note:** The hackathon evaluator injects `API_KEY` and `API_BASE_URL` automatically — do **not** set these as HF Space secrets, or you will bypass their LiteLLM proxy.
+
+---
+
 ## Task 1 — Transaction Categorisation (easy, max 2 steps)
 
 ### Reset Task 1
@@ -431,3 +457,6 @@ chmod +x test_hf_space.sh
 | `{"detail":"Not Found"}` | Endpoint doesn't exist. Check `/docs` to see available endpoints. |
 | Validation error | Check `confidence` is a float `0.0–1.0`, not a string. |
 | Step fails with penalty | Review feedback in response — likely invalid `action_type` or wrong payload schema. |
+| `KeyError: 'API_KEY'` | `API_KEY` env var not set. Set it explicitly or let the hackathon evaluator inject it. |
+| `KeyError: 'API_BASE_URL'` | `API_BASE_URL` env var not set. Set it explicitly or let the hackathon evaluator inject it. |
+| "No API calls through proxy" | Do **not** set `API_KEY` or `API_BASE_URL` as HF Space secrets — the evaluator injects them. |

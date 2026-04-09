@@ -42,11 +42,17 @@ LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").lower()
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
 
-TASKS = [
+ALL_TASKS = [
     ("task1", "Transaction Categorisation", "Easy"),
     ("task2", "Reconciliation",             "Medium"),
     ("task3", "Budget Planning",            "Hard"),
 ]
+
+# Set TASK=task1 (or task2 / task3) to run a single task
+_task_filter = os.getenv("TASK")
+TASKS = [t for t in ALL_TASKS if _task_filter is None or t[0] == _task_filter]
+if not TASKS:
+    raise ValueError(f"TASK={_task_filter!r} is not valid. Choose from: task1, task2, task3")
 
 SYSTEM_PROMPT = """\
 You are a financial intelligence agent operating in the FinanceEnv environment.

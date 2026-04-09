@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from finance_env.models import Action, Observation, Reward, State, Transaction
 
@@ -81,7 +81,29 @@ class FinanceEnv:
     # Public API
     # ------------------------------------------------------------------
 
-    def reset(self, task_id: str) -> Observation:
+    def reset(
+        self,
+        seed: Optional[int] = None,
+        episode_id: Optional[str] = None,
+        task_id: Optional[str] = None,
+        **kwargs,
+    ) -> Observation:
+        # Support both direct task_id and OpenEnv's seed-based selection
+        if task_id is None:
+            # Try to get task_id from kwargs (for backward compatibility)
+            task_id = kwargs.get("task_id")
+
+        if task_id is None and seed is not None:
+            if isinstance(seed, str):
+                task_id = seed  # baseline calls reset("task1") positionally
+            elif seed >= 0:
+                task_id = f"task{seed % 3 + 1}"
+            else:
+                task_id = "task1"
+
+        if task_id is None:
+            task_id = "task1"  # Default to task1
+
         if task_id not in TASK_DATA:
             raise ValueError(f"Unknown task_id '{task_id}'. Must be one of: {list(TASK_DATA)}")
 

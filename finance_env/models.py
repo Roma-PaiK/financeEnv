@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, List, Literal, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class Transaction(BaseModel):
@@ -24,12 +24,22 @@ class Observation(BaseModel):
     task_context: str                    # Natural language description of objective
     step_count: int
     sources_present: List[str]
+    # Required by openenv HTTP protocol (populated after each step)
+    done: bool = False
+    reward: Optional[float] = None
 
 
 class Action(BaseModel):
     action_type: Literal["categorize", "reconcile", "query", "set_budget", "finalize"]
     payload: Dict[str, Any]
     confidence: float = Field(..., ge=0.0, le=1.0)
+
+    @field_validator('confidence', mode='before')
+    @classmethod
+    def coerce_confidence(cls, v):
+        if isinstance(v, str):
+            return float(v)
+        return v
 
 
 class Reward(BaseModel):

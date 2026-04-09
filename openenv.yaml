@@ -1,5 +1,9 @@
+spec_version: 1
 name: FinanceEnv
-version: 1.0.0
+type: space
+runtime: fastapi
+app: server.app:app
+port: 8000
 description: >
   Multi-source personal finance environment. Trains agents to categorize
   transactions, reconcile cross-source duplicates, and build realistic budgets.
@@ -16,4 +20,3 @@ tasks:
     name: Forward Budget Planning
     difficulty: hard
     max_steps: 4
-entry_point: app.py

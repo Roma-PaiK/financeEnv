@@ -1,6 +1,6 @@
 # FinanceEnv — Local Testing Commands
 
-Base URL: `http://localhost:7860`
+Base URL: `http://localhost:8000`
 
 ---
 
@@ -8,7 +8,7 @@ Base URL: `http://localhost:7860`
 
 ```bash
 cd /Users/romapai/Documents/Projects/financeEnv
-.venv/bin/uvicorn app:app --reload --port 7860
+.venv/bin/uvicorn server.app:app --reload --port 8000
 ```
 
 ---
@@ -17,22 +17,22 @@ cd /Users/romapai/Documents/Projects/financeEnv
 
 ### Health
 ```bash
-curl http://localhost:7860/health
+curl http://localhost:8000/health
 ```
 
 ### Schema (action + observation shapes)
 ```bash
-curl http://localhost:7860/schema | python3 -m json.tool
+curl http://localhost:8000/schema | python3 -m json.tool
 ```
 
 ### Docs (open in browser)
 ```bash
-open http://localhost:7860/docs
+open http://localhost:8000/docs
 ```
 
 ### State (read current episode state)
 ```bash
-curl http://localhost:7860/state | python3 -m json.tool
+curl http://localhost:8000/state | python3 -m json.tool
 ```
 
 ---
@@ -41,14 +41,14 @@ curl http://localhost:7860/state | python3 -m json.tool
 
 **Reset**
 ```bash
-curl -s -X POST http://localhost:7860/reset \
+curl -s -X POST http://localhost:8000/reset \
   -H "Content-Type: application/json" \
   -d '{"task_id": "task1"}' | python3 -m json.tool
 ```
 
 **Categorize a transaction**
 ```bash
-curl -s -X POST http://localhost:7860/step \
+curl -s -X POST http://localhost:8000/step \
   -H "Content-Type: application/json" \
   -d '{
     "action_type": "categorize",
@@ -62,7 +62,7 @@ curl -s -X POST http://localhost:7860/step \
 
 **Finalize task1**
 ```bash
-curl -s -X POST http://localhost:7860/step \
+curl -s -X POST http://localhost:8000/step \
   -H "Content-Type: application/json" \
   -d '{
     "action_type": "finalize",
@@ -77,14 +77,14 @@ curl -s -X POST http://localhost:7860/step \
 
 **Reset**
 ```bash
-curl -s -X POST http://localhost:7860/reset \
+curl -s -X POST http://localhost:8000/reset \
   -H "Content-Type: application/json" \
   -d '{"task_id": "task2"}' | python3 -m json.tool
 ```
 
 **Query transactions**
 ```bash
-curl -s -X POST http://localhost:7860/step \
+curl -s -X POST http://localhost:8000/step \
   -H "Content-Type: application/json" \
   -d '{
     "action_type": "query",
@@ -95,7 +95,7 @@ curl -s -X POST http://localhost:7860/step \
 
 **Flag a duplicate/settlement row**
 ```bash
-curl -s -X POST http://localhost:7860/step \
+curl -s -X POST http://localhost:8000/step \
   -H "Content-Type: application/json" \
   -d '{
     "action_type": "reconcile",
@@ -110,7 +110,7 @@ curl -s -X POST http://localhost:7860/step \
 
 **Finalize task2**
 ```bash
-curl -s -X POST http://localhost:7860/step \
+curl -s -X POST http://localhost:8000/step \
   -H "Content-Type: application/json" \
   -d '{
     "action_type": "finalize",
@@ -131,14 +131,14 @@ curl -s -X POST http://localhost:7860/step \
 
 **Reset**
 ```bash
-curl -s -X POST http://localhost:7860/reset \
+curl -s -X POST http://localhost:8000/reset \
   -H "Content-Type: application/json" \
   -d '{"task_id": "task3"}' | python3 -m json.tool
 ```
 
 **Query category history**
 ```bash
-curl -s -X POST http://localhost:7860/step \
+curl -s -X POST http://localhost:8000/step \
   -H "Content-Type: application/json" \
   -d '{
     "action_type": "query",
@@ -149,7 +149,7 @@ curl -s -X POST http://localhost:7860/step \
 
 **Set a budget for a category**
 ```bash
-curl -s -X POST http://localhost:7860/step \
+curl -s -X POST http://localhost:8000/step \
   -H "Content-Type: application/json" \
   -d '{
     "action_type": "set_budget",
@@ -163,7 +163,7 @@ curl -s -X POST http://localhost:7860/step \
 
 **Finalize task3 (must include all 9 categories)**
 ```bash
-curl -s -X POST http://localhost:7860/step \
+curl -s -X POST http://localhost:8000/step \
   -H "Content-Type: application/json" \
   -d '{
     "action_type": "finalize",
@@ -186,31 +186,54 @@ curl -s -X POST http://localhost:7860/step \
 
 ---
 
-## Inference Agent (local pre-deploy test)
+## Inference Agent
 
-Runs `inference.py` against the local server. `API_KEY` and `API_BASE_URL` are **mandatory** — no defaults.
+`API_KEY` and `API_BASE_URL` are **mandatory** — no defaults.
+`SPACE_URL` defaults to `http://localhost:8000` — override for HF Space testing.
 
 ### Prerequisites — start the server first
 ```bash
-.venv/bin/uvicorn app:app --reload --port 7860
+.venv/bin/uvicorn server.app:app --reload --port 8000
 ```
 
-### Task 1
+### Local server (default — no SPACE_URL needed)
+
+#### Task 1
 ```bash
 API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task1 \
-  SPACE_URL=http://localhost:7860 .venv/bin/python inference.py
+  .venv/bin/python inference.py
 ```
 
-### Task 2
+#### Task 2
 ```bash
 API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task2 \
-  SPACE_URL=http://localhost:7860 .venv/bin/python inference.py
+  .venv/bin/python inference.py
 ```
 
-### Task 3
+#### Task 3
 ```bash
 API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task3 \
-  SPACE_URL=http://localhost:7860 .venv/bin/python inference.py
+  .venv/bin/python inference.py
+```
+
+### HF Space (override SPACE_URL to point at the live space)
+
+#### Task 1
+```bash
+API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task1 \
+  SPACE_URL=https://romapai-finance-env-india.hf.space .venv/bin/python inference.py
+```
+
+#### Task 2
+```bash
+API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task2 \
+  SPACE_URL=https://romapai-finance-env-india.hf.space .venv/bin/python inference.py
+```
+
+#### Task 3
+```bash
+API_BASE_URL=https://api.openai.com/v1 API_KEY=sk-... TASK_NAME=task3 \
+  SPACE_URL=https://romapai-finance-env-india.hf.space .venv/bin/python inference.py
 ```
 
 ### Baseline agent (calls env.py directly, no server needed)

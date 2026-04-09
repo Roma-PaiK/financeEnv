@@ -43,7 +43,7 @@ API_BASE_URL   = os.environ["API_BASE_URL"]   # injected by hackathon evaluator 
 MODEL_NAME     = os.getenv("MODEL_NAME", "gpt-4o")
 OPENAI_API_KEY = os.environ["API_KEY"]        # injected by hackathon evaluator — no default
 HF_TOKEN     = os.getenv("HF_TOKEN")     # Optional: for HF Space auth if needed
-SPACE_URL    = os.getenv("SPACE_URL",    "https://romapai-finance-env-india.hf.space").rstrip("/")
+SPACE_URL    = os.getenv("SPACE_URL",    "http://localhost:8000").rstrip("/")
 TASK_NAME    = os.getenv("TASK_NAME",    "task1")
 BENCHMARK    = "finance_env_india"
 

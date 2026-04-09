@@ -24,11 +24,13 @@ dependencies = [
 ]
 
 [project.scripts]
-finance-env-server = "server.app:main"
+server = "finance_env.server.app:main"
 
 [project.urls]
 Homepage = "https://huggingface.co/spaces/romapai/finance-env-india"
 Repository = "https://github.com/romapai/financeEnv"
 
 [tool.setuptools]
-packages = ["finance_env", "baseline", "server"]
+include-package-data = true
+packages = ["finance_env", "finance_env.server"]
+package-dir = {"finance_env" = "finance_env", "finance_env.server" = "server"}

@@ -113,7 +113,7 @@ def run_task(client: OpenAI, env: FinanceEnv, task_id: str, provider: str, model
     final_score = 0.0
     total_tokens_in = 0
     total_tokens_out = 0
-    max_steps = {"task1": 25, "task2": 40, "task3": 60}.get(task_id, 25)
+    max_steps = {"task1": 2, "task2": 3, "task3": 4}.get(task_id, 25)
 
     print(f"\n{'=' * 70}")
     print(f"  Running {task_id.upper()}  |  {len(obs.transactions)} transactions  |  max_steps={max_steps}")

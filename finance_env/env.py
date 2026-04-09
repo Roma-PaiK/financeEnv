@@ -25,9 +25,9 @@ TASK_DATA: Dict[str, List[str]] = {
 }
 
 MAX_STEPS: Dict[str, int] = {
-    "task1": 5,
-    "task2": 6,
-    "task3": 7,
+    "task1": 2,
+    "task2": 3,
+    "task3": 4,
 }
 
 LEGAL_ACTIONS: Dict[str, List[str]] = {

@@ -7,13 +7,13 @@ tasks:
   - id: task1
     name: Transaction Categorisation
     difficulty: easy
-    max_steps: 25
+    max_steps: 2
   - id: task2
     name: Cross-Source Reconciliation
     difficulty: medium
-    max_steps: 40
+    max_steps: 3
   - id: task3
     name: Forward Budget Planning
     difficulty: hard
-    max_steps: 60
+    max_steps: 4
 entry_point: app.py

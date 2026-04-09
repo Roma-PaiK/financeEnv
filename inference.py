@@ -50,7 +50,7 @@ BENCHMARK    = "finance_env_india"
 SUCCESS_SCORE_THRESHOLD = 0.5  # cumulative_score >= this → success
 
 # Max steps per task (mirrors env.py MAX_STEPS)
-MAX_STEPS = {"task1": 5, "task2": 6, "task3": 7}
+MAX_STEPS = {"task1": 2, "task2": 3, "task3": 4}
 
 # ---------------------------------------------------------------------------
 # System prompts per task

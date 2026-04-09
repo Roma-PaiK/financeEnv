@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finance-env"
+version = "0.1.0"
+description = "OpenEnv-compatible reinforcement learning environment for financial task automation"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    {name = "FinanceEnv Contributors"},
+]
+license = {text = "MIT"}
+
+dependencies = [
+    "pydantic>=2.0",
+    "fastapi",
+    "uvicorn[standard]",
+    "openai",
+    "python-dotenv",
+    "huggingface_hub",
+    "openenv-core",
+]
+
+[project.urls]
+Homepage = "https://huggingface.co/spaces/romapai/finance-env-india"
+Repository = "https://github.com/romapai/financeEnv"
+
+[tool.setuptools]
+packages = ["finance_env", "baseline"]

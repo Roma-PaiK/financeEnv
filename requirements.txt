@@ -4,3 +4,4 @@ uvicorn[standard]
 openai
 python-dotenv
 huggingface_hub
+openenv

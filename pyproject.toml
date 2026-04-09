@@ -23,9 +23,12 @@ dependencies = [
     "openenv-core",
 ]
 
+[project.scripts]
+finance-env-server = "server.app:app"
+
 [project.urls]
 Homepage = "https://huggingface.co/spaces/romapai/finance-env-india"
 Repository = "https://github.com/romapai/financeEnv"
 
 [tool.setuptools]
-packages = ["finance_env", "baseline"]
+packages = ["finance_env", "baseline", "server"]

@@ -223,11 +223,12 @@ def build_user_message(obs: dict, last_feedback: Optional[str]) -> str:
 # ---------------------------------------------------------------------------
 # Score clamping — ensures reported score is strictly in (0, 1)
 # ---------------------------------------------------------------------------
-_SCORE_EPS = 1e-6
+_SCORE_MIN = 0.001  # min value safe when formatted with :.3f  →  "0.001"
+_SCORE_MAX = 0.999  # max value safe when formatted with :.3f  →  "0.999"
 
 
 def _clamp_score(score: float) -> float:
-    return min(1.0 - _SCORE_EPS, max(_SCORE_EPS, score))
+    return min(_SCORE_MAX, max(_SCORE_MIN, score))
 
 
 # ---------------------------------------------------------------------------
@@ -236,7 +237,7 @@ def _clamp_score(score: float) -> float:
 def run_episode(client: Any, model_name: str, task_name: str) -> None:
     rewards:     List[float] = []
     steps_taken: int         = 0
-    final_score: float       = _SCORE_EPS  # never 0.0 — ensures strict (0, 1)
+    final_score: float       = _SCORE_MIN  # never 0.0 — ensures strict (0, 1)
     success:     bool        = False
     emitted_step: bool       = False
 
@@ -322,7 +323,7 @@ def main() -> None:
         for task_name in ("task1", "task2", "task3"):
             log_start(task=task_name, env=BENCHMARK, model=MODEL_NAME or "auto")
             log_step(step=1, action="noop", reward=0.0, done=True, error=str(exc))
-            log_end(success=False, steps=1, score=_SCORE_EPS, rewards=[0.0])
+            log_end(success=False, steps=1, score=_SCORE_MIN, rewards=[0.0])
         return
 
     for task_name in ("task1", "task2", "task3"):

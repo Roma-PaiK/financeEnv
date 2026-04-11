@@ -25,6 +25,7 @@ dependencies = [
 
 [project.scripts]
 server = "finance_env.server.app:main"
+agent = "finance_env.agent:main"
 
 [project.urls]
 Homepage = "https://huggingface.co/spaces/romapai/finance-env-india"

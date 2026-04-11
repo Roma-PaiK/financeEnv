@@ -212,15 +212,19 @@ def run_task(client: OpenAI, env: FinanceEnv, task_id: str, provider: str, model
 def main() -> None:
     # Validate and initialize LLM client
     if LLM_PROVIDER == "openai":
-        api_key = os.environ.get("OPENAI_API_KEY")
+        # Hackathon proxy injects API_BASE_URL and API_KEY; fall back to direct OpenAI for local dev.
+        api_base_url = os.environ.get("API_BASE_URL")
+        api_key = os.environ.get("API_KEY") or os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise ValueError(
-                "LLM_PROVIDER=openai but OPENAI_API_KEY is not set.\n"
-                "Run: export OPENAI_API_KEY=sk-... && python baseline/run_baseline.py"
+                "No API key found. Set API_KEY (hackathon proxy) or OPENAI_API_KEY (local dev)."
             )
-        client = OpenAI(api_key=api_key)
+        client_kwargs: dict[str, Any] = {"api_key": api_key}
+        if api_base_url:
+            client_kwargs["base_url"] = api_base_url
+        client = OpenAI(**client_kwargs)
         model = "gpt-4o"
-        print(f"Using OpenAI API (model: {model})")
+        print(f"Using OpenAI API (model: {model}, base_url: {api_base_url or 'default'})")
 
     elif LLM_PROVIDER == "ollama":
         # Ollama uses OpenAI-compatible API

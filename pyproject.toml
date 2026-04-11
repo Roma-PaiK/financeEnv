@@ -3,7 +3,7 @@ requires = ["setuptools>=65.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "finance-env"
+name = "openenv-finance_env"
 version = "0.1.0"
 description = "OpenEnv-compatible reinforcement learning environment for financial task automation"
 readme = "README.md"
@@ -25,7 +25,8 @@ dependencies = [
 
 [project.scripts]
 server = "finance_env.server.app:main"
-agent = "finance_env.agent:main"
+inference = "finance_env.inference:main"
+validate-submission = "finance_env.validate_submission:main"
 
 [project.urls]
 Homepage = "https://huggingface.co/spaces/romapai/finance-env-india"

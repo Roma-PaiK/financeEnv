@@ -221,31 +221,33 @@ def build_user_message(obs: dict, last_feedback: Optional[str]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Main episode loop
+# Score clamping — ensures reported score is strictly in (0, 1)
 # ---------------------------------------------------------------------------
-def main() -> None:
-    from openai import OpenAI
+_SCORE_EPS = 1e-6
 
+
+def _clamp_score(score: float) -> float:
+    return min(1.0 - _SCORE_EPS, max(_SCORE_EPS, score))
+
+
+# ---------------------------------------------------------------------------
+# Single-task episode loop
+# ---------------------------------------------------------------------------
+def run_episode(client: Any, model_name: str, task_name: str) -> None:
     rewards:     List[float] = []
     steps_taken: int         = 0
-    final_score: float       = 0.0
+    final_score: float       = _SCORE_EPS  # never 0.0 — ensures strict (0, 1)
     success:     bool        = False
     emitted_step: bool       = False
 
-    log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME or "auto")
+    log_start(task=task_name, env=BENCHMARK, model=model_name)
 
     try:
-        if not API_KEY:
-            raise RuntimeError("No API key found. Set API_KEY or HF_TOKEN.")
-
-        client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
-        model_name = _resolve_working_model(client)
-
         messages: list = [{"role": "system", "content": SYSTEM_PROMPT}]
         last_feedback: Optional[str] = None
-        max_steps = {"task1": 2, "task2": 3, "task3": 4}.get(TASK_NAME, MAX_STEPS)
+        max_steps = {"task1": 2, "task2": 3, "task3": 4}.get(task_name, MAX_STEPS)
 
-        obs = http_post("/reset", {"task_id": TASK_NAME})
+        obs = http_post("/reset", {"task_id": task_name})
 
         for step in range(1, max_steps + 1):
             user_msg = build_user_message(obs, last_feedback)
@@ -274,7 +276,8 @@ def main() -> None:
                 done        = bool(result.get("done", False))
                 reward      = float(reward_obj.get("score", 0.0)) if isinstance(reward_obj, dict) else float(reward_obj or 0.0)
                 last_feedback = reward_obj.get("feedback") if isinstance(reward_obj, dict) else None
-                final_score   = float(reward_obj.get("cumulative_score", final_score)) if isinstance(reward_obj, dict) else final_score
+                if isinstance(reward_obj, dict) and "cumulative_score" in reward_obj:
+                    final_score = _clamp_score(float(reward_obj["cumulative_score"]))
             except Exception as exc:
                 error = str(exc)
                 done  = True
@@ -290,7 +293,7 @@ def main() -> None:
         success = final_score >= SUCCESS_SCORE_THRESHOLD
 
     except Exception as exc:
-        print(f"[DEBUG] Episode error: {exc}", file=sys.stderr, flush=True)
+        print(f"[DEBUG] Episode error ({task_name}): {exc}", file=sys.stderr, flush=True)
         if not emitted_step:
             rewards.append(0.0)
             steps_taken = 1
@@ -298,6 +301,32 @@ def main() -> None:
 
     finally:
         log_end(success=success, steps=steps_taken, score=final_score, rewards=rewards)
+
+
+# ---------------------------------------------------------------------------
+# Main — runs all 3 tasks so the evaluator sees scores for each
+# ---------------------------------------------------------------------------
+def main() -> None:
+    from openai import OpenAI
+
+    try:
+        if not API_KEY:
+            raise RuntimeError("No API key found. Set API_KEY or HF_TOKEN.")
+
+        client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
+        model_name = _resolve_working_model(client)
+
+    except Exception as exc:
+        print(f"[DEBUG] Setup error: {exc}", file=sys.stderr, flush=True)
+        # Emit a minimal valid output for all 3 tasks so the evaluator has something
+        for task_name in ("task1", "task2", "task3"):
+            log_start(task=task_name, env=BENCHMARK, model=MODEL_NAME or "auto")
+            log_step(step=1, action="noop", reward=0.0, done=True, error=str(exc))
+            log_end(success=False, steps=1, score=_SCORE_EPS, rewards=[0.0])
+        return
+
+    for task_name in ("task1", "task2", "task3"):
+        run_episode(client, model_name, task_name)
 
 
 if __name__ == "__main__":

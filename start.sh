@@ -15,8 +15,10 @@ for i in $(seq 1 30); do
     sleep 1
 done
 
-# Run the inference agent (uses API_BASE_URL and API_KEY injected by evaluator)
-if [ -n "$TASK_NAME" ]; then
+# Run the inference agent if LLM proxy credentials are available
+# (injected by the hackathon evaluator; skipped during plain env-only usage)
+if [ -n "$API_BASE_URL" ] && [ -n "$API_KEY" ]; then
+    echo "LLM proxy detected — running inference agent..."
     python inference.py
 fi
 

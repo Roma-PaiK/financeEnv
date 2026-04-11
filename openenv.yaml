@@ -3,7 +3,7 @@ name: FinanceEnv
 type: space
 runtime: fastapi
 app: server.app:app
-port: 8000
+port: 7860
 description: >
   Multi-source personal finance environment. Trains agents to categorize
   transactions, reconcile cross-source duplicates, and build realistic budgets.

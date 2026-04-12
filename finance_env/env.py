@@ -1,9 +1,9 @@
 """
-FinanceEnv — Core Environment
+FinanceEnv — stateful gym-like environment for financial tasks.
 
-Public API:
+Usage:
     env = FinanceEnv()
-    obs  = env.reset(task_id)          # "task1" | "task2" | "task3"
+    obs = env.reset("task1")          # "task1" | "task2" | "task3"
     obs, reward, done, info = env.step(action)
     state = env.state()
 """
@@ -18,17 +18,14 @@ from finance_env.models import Action, Observation, Reward, State, Transaction
 
 DATA_DIR = Path(__file__).parent / "data"
 
+# Primary data file(s) per task
 TASK_DATA: Dict[str, List[str]] = {
     "task1": ["task1_transactions.json"],
     "task2": ["task2_multi_source.json", "task2_ground_truth.json"],
     "task3": ["task3_history.json", "task3_goals.json", "task3_simulation.json"],
 }
 
-MAX_STEPS: Dict[str, int] = {
-    "task1": 2,
-    "task2": 3,
-    "task3": 4,
-}
+MAX_STEPS: Dict[str, int] = {"task1": 2, "task2": 3, "task3": 4}
 
 LEGAL_ACTIONS: Dict[str, List[str]] = {
     "task1": ["categorize", "finalize"],
@@ -55,6 +52,7 @@ TASK_CONTEXT: Dict[str, str] = {
     ),
 }
 
+# Fields that exist in raw data but must never be sent to the agent
 HIDDEN_FIELDS = {"correct_category", "is_cc_settlement"}
 
 
@@ -67,15 +65,11 @@ class FinanceEnv:
         self._task_id: str = ""
         self._raw_transactions: List[Dict[str, Any]] = []
         self._state: State = State(
-            task_id="",
-            step_count=0,
-            cumulative_score=0.0,
-            done=False,
-            addressed_ids=[],
-            budget_draft={},
+            task_id="", step_count=0, cumulative_score=0.0,
+            done=False, addressed_ids=[], budget_draft={},
         )
-        self._correct_count: int = 0  # task1/task2: tracks exact match count for finalize
-        self._query_count: int = 0    # task3: tracks number of query actions taken
+        self._correct_count: int = 0  # exact-match count passed to finalize graders
+        self._query_count: int = 0    # task3: number of query actions (penalised if zero at finalize)
 
     # ------------------------------------------------------------------
     # Public API
@@ -88,21 +82,25 @@ class FinanceEnv:
         task_id: Optional[str] = None,
         **kwargs,
     ) -> Observation:
-        # Support both direct task_id and OpenEnv's seed-based selection
+        """
+        Start a new episode. Returns the initial Observation.
+
+        task_id: "task1" | "task2" | "task3"
+        seed: fallback — integer maps to task via (seed % 3 + 1), string treated as task_id
+        """
         if task_id is None:
-            # Try to get task_id from kwargs (for backward compatibility)
             task_id = kwargs.get("task_id")
 
         if task_id is None and seed is not None:
             if isinstance(seed, str):
-                task_id = seed  # baseline calls reset("task1") positionally
+                task_id = seed  # baseline passes task_id positionally as seed
             elif seed >= 0:
                 task_id = f"task{seed % 3 + 1}"
             else:
                 task_id = "task1"
 
         if task_id is None:
-            task_id = "task1"  # Default to task1
+            task_id = "task1"
 
         if task_id not in TASK_DATA:
             raise ValueError(f"Unknown task_id '{task_id}'. Must be one of: {list(TASK_DATA)}")
@@ -111,37 +109,36 @@ class FinanceEnv:
         self._raw_transactions = self._load_transactions(task_id)
         self._correct_count = 0
         self._query_count = 0
-
         self._state = State(
-            task_id=task_id,
-            step_count=0,
-            cumulative_score=0.0,
-            done=False,
-            addressed_ids=[],
-            budget_draft={},
+            task_id=task_id, step_count=0, cumulative_score=0.0,
+            done=False, addressed_ids=[], budget_draft={},
         )
-
         return self._build_observation()
 
     def step(self, action: Action) -> Tuple[Observation, Reward, bool, dict]:
+        """
+        Advance the episode by one action.
+        Returns (Observation, Reward, done, info).
+        Only this method mutates state.
+        """
         if self._state.done:
             raise RuntimeError("Episode is done. Call reset() to start a new episode.")
 
-        # --- Universal penalty: illegal action_type for this task ---
+        # Universal penalty: wrong action type for this task
         if action.action_type not in LEGAL_ACTIONS[self._task_id]:
             reward = self._make_reward(
                 score_delta=-0.020,
                 partial_scores={},
                 feedback=(
-                    f"'{action.action_type}' is not a valid action for {self._task_id}. "
-                    f"Legal actions: {LEGAL_ACTIONS[self._task_id]}"
+                    f"'{action.action_type}' is not valid for {self._task_id}. "
+                    f"Legal: {LEGAL_ACTIONS[self._task_id]}"
                 ),
                 done=False,
             )
             self._state.step_count += 1
             return self._build_observation(), reward, False, {}
 
-        # --- Universal penalty: repeated transaction (3+ times) ---
+        # Universal penalty: same transaction acted on 3+ times
         if action.action_type in ("categorize", "reconcile"):
             txn_id = action.payload.get("transaction_id", "")
             repeat_count = self._state.addressed_ids.count(txn_id)
@@ -149,37 +146,32 @@ class FinanceEnv:
                 reward = self._make_reward(
                     score_delta=-0.030,
                     partial_scores={},
-                    feedback=f"Loop penalty: '{txn_id}' has been acted on {repeat_count + 1} times.",
+                    feedback=f"Loop penalty: '{txn_id}' actioned {repeat_count + 1} times.",
                     done=False,
                 )
                 self._state.step_count += 1
                 self._check_max_steps(reward)
                 return self._build_observation(), reward, reward.done, {}
 
-        # --- Dispatch to task grader ---
         score_delta, partial_scores, feedback, done = self._dispatch(action)
 
-        # Track addressed IDs and correct count
-        # Task 1: categorize actions
+        # Task 1: track addressed IDs and auto-finalize when all transactions are categorized
         if action.action_type == "categorize" and score_delta != -0.010:
             txn_id = action.payload.get("transaction_id", "")
             if txn_id and txn_id not in self._state.addressed_ids:
                 self._state.addressed_ids.append(txn_id)
                 if score_delta == 0.040:
                     self._correct_count += 1
-            # Auto-finalize when all transactions addressed
             if len(self._state.addressed_ids) == len(self._raw_transactions) and not done:
                 from finance_env.tasks.task1_categorize import grade_finalize
                 fin_delta, fin_partial, fin_feedback, done = grade_finalize(
-                    self._state.addressed_ids,
-                    self._state.step_count + 1,
-                    self._correct_count,
+                    self._state.addressed_ids, self._state.step_count + 1, self._correct_count,
                 )
                 score_delta += fin_delta
                 partial_scores.update(fin_partial)
                 feedback += " " + fin_feedback
 
-        # Task 2: reconcile actions
+        # Task 2: track correctly reconciled transactions
         if action.action_type == "reconcile" and score_delta not in (-0.010, -0.020):
             txn_id = action.payload.get("transaction_id", "")
             if txn_id and txn_id not in self._state.addressed_ids:
@@ -191,10 +183,10 @@ class FinanceEnv:
         self._state.step_count += 1
         self._state.done = done
         self._check_max_steps(reward)
-
         return self._build_observation(), reward, reward.done, {}
 
     def state(self) -> State:
+        """Read-only snapshot of current episode state."""
         return self._state.model_copy()
 
     # ------------------------------------------------------------------
@@ -208,80 +200,46 @@ class FinanceEnv:
             return self._dispatch_task2(action)
         elif self._task_id == "task3":
             return self._dispatch_task3(action)
-        raise NotImplementedError(f"{self._task_id} grader not yet implemented.")
+        raise NotImplementedError(f"{self._task_id} grader not implemented.")
 
     def _dispatch_task1(self, action: Action) -> Tuple[float, Dict[str, Any], str, bool]:
         from finance_env.tasks.task1_categorize import grade_categorize, grade_finalize
-
         if action.action_type == "categorize":
             return grade_categorize(action.payload, self._state.addressed_ids)
-
         if action.action_type == "finalize":
-            return grade_finalize(
-                self._state.addressed_ids,
-                self._state.step_count,
-                self._correct_count,
-            )
-
-        # Should never reach here — caught by legal action check above
-        raise ValueError(f"Unexpected action_type '{action.action_type}' in task1 dispatch.")
+            return grade_finalize(self._state.addressed_ids, self._state.step_count, self._correct_count)
+        raise ValueError(f"Unexpected action '{action.action_type}' in task1.")
 
     def _dispatch_task2(self, action: Action) -> Tuple[float, Dict[str, Any], str, bool]:
-        from finance_env.tasks.task2_reconcile import (
-            grade_reconcile,
-            grade_query,
-            grade_finalize,
-        )
-
+        from finance_env.tasks.task2_reconcile import grade_reconcile, grade_query, grade_finalize
         if action.action_type == "reconcile":
             return grade_reconcile(action.payload, self._state.addressed_ids, self._correct_count)
-
         if action.action_type == "query":
             return grade_query(action.payload, self._state.addressed_ids, self._correct_count)
-
         if action.action_type == "finalize":
             return grade_finalize(action.payload, self._state.addressed_ids, self._correct_count)
-
-        # Should never reach here
-        raise ValueError(f"Unexpected action_type '{action.action_type}' in task2 dispatch.")
+        raise ValueError(f"Unexpected action '{action.action_type}' in task2.")
 
     def _dispatch_task3(self, action: Action) -> Tuple[float, Dict[str, Any], str, bool]:
         from finance_env.tasks.task3_budget import grade_set_budget, grade_query, grade_finalize
-
         if action.action_type == "set_budget":
-            # grade_set_budget mutates _state.budget_draft in place
             return grade_set_budget(action.payload, self._state.budget_draft)
-
         if action.action_type == "query":
             self._query_count += 1
             return grade_query(action.payload, self._state.budget_draft)
-
         if action.action_type == "finalize":
             return grade_finalize(action.payload, self._state.budget_draft, self._query_count)
+        raise ValueError(f"Unexpected action '{action.action_type}' in task3.")
 
-        # Should never reach here
-        raise ValueError(f"Unexpected action_type '{action.action_type}' in task3 dispatch.")
-
-    def _make_reward(
-        self,
-        score_delta: float,
-        partial_scores: Dict[str, Any],
-        feedback: str,
-        done: bool,
-    ) -> Reward:
-        # Clamp cumulative_score to exclusive interval (1e-6, 1 - 1e-6)
+    def _make_reward(self, score_delta: float, partial_scores: Dict[str, Any], feedback: str, done: bool) -> Reward:
+        """Apply score_delta to cumulative, clamp to (eps, 1-eps), return Reward."""
         eps = 1e-6
         new_cumulative = min(1.0 - eps, max(eps, self._state.cumulative_score + score_delta))
         self._state.cumulative_score = new_cumulative
-        return Reward(
-            score=score_delta,
-            partial_scores=partial_scores,
-            feedback=feedback,
-            done=done,
-            cumulative_score=new_cumulative,
-        )
+        return Reward(score=score_delta, partial_scores=partial_scores, feedback=feedback, done=done, cumulative_score=new_cumulative)
 
     def _check_max_steps(self, reward: Reward) -> None:
+        """Hard-stop the episode if MAX_STEPS reached."""
         if self._state.step_count >= MAX_STEPS[self._task_id]:
             reward.done = True
             reward.feedback += " [MAX STEPS REACHED]"
@@ -293,14 +251,14 @@ class FinanceEnv:
             return json.load(f)
 
     def _build_observation(self) -> Observation:
+        """Build an Observation from current state, stripping hidden fields."""
         stripped = [Transaction(**_strip_hidden(t)) for t in self._raw_transactions]
         sources = list({t["source"] for t in self._raw_transactions})
         current_month = (
-            max(t["date"][:7] for t in self._raw_transactions)
-            if self._raw_transactions else ""
+            max(t["date"][:7] for t in self._raw_transactions) if self._raw_transactions else ""
         )
+        # Balance = income minus all debits in the dataset
         balance = 85000.0 - sum(t["amount"] for t in self._raw_transactions if t["amount"] > 0)
-
         return Observation(
             transactions=stripped,
             account_balance=round(balance, 2),

@@ -1,7 +1,12 @@
 """
-validate_submission.py — pre-submission check.
-Runs inference.py and verifies [START] / [STEP] / [END] output is present.
+validate_submission.py — pre-submission sanity check.
+
+Runs inference.py as a subprocess and verifies the evaluator-required
+[START] / [STEP] / [END] markers are present in stdout.
+Writes a report to artifacts/submission/pre_submission_report.json.
+Exits with code 1 on failure.
 """
+
 from __future__ import annotations
 
 import json
@@ -22,7 +27,7 @@ def _run_inference_check() -> Dict[str, Any]:
     env = os.environ.copy()
     env.setdefault("SPACE_URL", "http://localhost:7860")
     proc = subprocess.run(
-        [sys.executable, str(root / "inference.py")],
+        [sys.executable, str(root / "finance_env" / "inference.py")],
         cwd=str(root),
         env=env,
         capture_output=True,
@@ -47,12 +52,10 @@ def _run_inference_check() -> Dict[str, Any]:
     }
 
 
-def _write_reports(report: Dict[str, Any]) -> None:
+def _write_report(report: Dict[str, Any]) -> None:
     out_dir = _project_root() / "artifacts" / "submission"
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "pre_submission_report.json").write_text(
-        json.dumps(report, indent=2), encoding="utf-8"
-    )
+    (out_dir / "pre_submission_report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
 
 
 def main() -> None:
@@ -62,12 +65,9 @@ def main() -> None:
         "overall_passed": bool(check["passed"]),
         "checks": [check],
     }
-    _write_reports(report)
-    print(
-        f"validate_submission: {'PASS' if report['overall_passed'] else 'FAIL'} "
-        f"(start={check['has_start']} step={check['has_step']} end={check['has_end']})",
-        flush=True,
-    )
+    _write_report(report)
+    status = "PASS" if report["overall_passed"] else "FAIL"
+    print(f"validate_submission: {status} (start={check['has_start']} step={check['has_step']} end={check['has_end']})", flush=True)
     if not report["overall_passed"]:
         sys.exit(1)
 

@@ -1,22 +1,21 @@
 """
-inference.py — FinanceEnv OpenEnv Submission
-=============================================
-Runs one full episode against the finance environment using an LLM
-to decide actions. Prints structured logs consumed by the evaluator.
+inference.py — LLM agent that runs one episode against the FinanceEnv HTTP server.
 
-Environment variables:
+Reads from environment variables, calls /reset and /step, logs structured output
+consumed by the hackathon evaluator.
+
+Env vars:
     API_BASE_URL   LLM proxy endpoint (default: HuggingFace router)
-    API_KEY        LLM proxy key (or HF_TOKEN)
-    HF_TOKEN       Alternative key name
-    MODEL_NAME     Model to use (default: auto-resolved from proxy)
+    API_KEY        LLM key (or HF_TOKEN)
+    MODEL_NAME     Model to use (auto-resolved from proxy if unset)
     ENV_BASE_URL   Environment server URL (default: http://localhost:7860)
-    SPACE_URL      Alternative env var for environment server URL
-    TASK_NAME      Which task: task1 | task2 | task3 (default: task1)
+    SPACE_URL      Alias for ENV_BASE_URL
+    TASK_NAME      task1 | task2 | task3 (default: task1)
 
-STDOUT FORMAT (machine-parsed by evaluator):
-    [START] task=<task_name> env=<benchmark> model=<model_name>
-    [STEP]  step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
-    [END]   success=<true|false> steps=<n> score=<0.000> rewards=<r1,r2,...>
+Stdout format (machine-parsed by evaluator):
+    [START] task=<name> env=<benchmark> model=<model>
+    [STEP]  step=<n> action=<json> reward=<float> done=<bool> error=<msg|null>
+    [END]   success=<bool> steps=<n> score=<float> rewards=<r1,r2,...>
 """
 
 from __future__ import annotations
@@ -30,9 +29,7 @@ import urllib.request
 from pathlib import Path
 from typing import Any, List, Optional
 
-# ---------------------------------------------------------------------------
-# Load .env if present (local dev only)
-# ---------------------------------------------------------------------------
+# Load .env file if present (local dev only)
 _env_file = Path(__file__).parent.parent / ".env"
 if _env_file.exists():
     for _line in _env_file.read_text().splitlines():
@@ -40,27 +37,17 @@ if _env_file.exists():
             _k, _v = _line.split("=", 1)
             os.environ.setdefault(_k.strip(), _v.strip())
 
-# ---------------------------------------------------------------------------
-# Configuration — all os.getenv() with fallbacks, never crash at import
-# ---------------------------------------------------------------------------
 API_BASE_URL = os.getenv("API_BASE_URL") or "https://router.huggingface.co/v1"
 API_KEY      = os.getenv("API_KEY") or os.getenv("HF_TOKEN") or ""
 MODEL_NAME   = os.getenv("MODEL_NAME", "")
-SPACE_URL    = (
-    os.getenv("ENV_BASE_URL")
-    or os.getenv("SPACE_URL")
-    or "http://localhost:7860"
-).rstrip("/")
-TASK_NAME  = os.getenv("TASK_NAME", "task1")
-BENCHMARK  = "finance_env_india"
+SPACE_URL    = (os.getenv("ENV_BASE_URL") or os.getenv("SPACE_URL") or "http://localhost:7860").rstrip("/")
+TASK_NAME    = os.getenv("TASK_NAME", "task1")
+BENCHMARK    = "finance_env_india"
 
-MAX_STEPS             = int(os.getenv("MAX_STEPS", "25"))
-TEMPERATURE           = float(os.getenv("TEMPERATURE", "0"))
+MAX_STEPS               = int(os.getenv("MAX_STEPS", "25"))
+TEMPERATURE             = float(os.getenv("TEMPERATURE", "0"))
 SUCCESS_SCORE_THRESHOLD = float(os.getenv("SUCCESS_SCORE_THRESHOLD", "0.5"))
 
-# ---------------------------------------------------------------------------
-# Prompts
-# ---------------------------------------------------------------------------
 SYSTEM_PROMPT = textwrap.dedent("""
     You are a financial intelligence agent operating in the FinanceEnv environment.
     At each step you receive an observation and must respond with a single JSON action.
@@ -83,12 +70,11 @@ SYSTEM_PROMPT = textwrap.dedent("""
     Identify duplicate/settlement rows. Use:
       "reconcile": { "transaction_id": "<id>", "classification": "genuine_spend" | "cc_settlement" | "internal_transfer" | "refund" }
       "query": { "query_type": "merchant" | "date_range", "value": "<merchant_substring or YYYY-MM-DD:YYYY-MM-DD>" }
-      "finalize": { "reconciled_totals": { "2024-01": { "Food & Dining": float, ... }, ... }, "excluded_ids": [<cc_settlement_ids>] }
+      "finalize": { "reconciled_totals": { "2024-01": { "Food & Dining": float, ... }, ... }, "excluded_ids": [<ids>] }
 
     === TASK 3: Budget Planning ===
-    You are given 2 months of pre-reconciled spend history. Build a realistic monthly budget for all 9 categories.
-    Goals: Save Rs8,000. Reduce Food & Dining by 15% vs last month. Fixed EMI: Rs12,000. Income: Rs85,000.
-      "query": { "category": "<one of the 9 categories>", "months": ["2024-01", "2024-02"] }
+    Build a realistic monthly budget for all 9 categories. Income: Rs85,000. Savings goal: Rs8,000.
+      "query": { "category": "<category>", "months": ["2024-01", "2024-02"] }
       "set_budget": { "category": "<category>", "amount": <float> }
       "finalize": { "budget": { "Food & Dining": float, ... } }
     Rules: budget sum MUST be <= 85000. All 9 categories required.
@@ -98,8 +84,9 @@ SYSTEM_PROMPT = textwrap.dedent("""
 
 
 # ---------------------------------------------------------------------------
-# Loggers
+# Structured log helpers — format required by the evaluator
 # ---------------------------------------------------------------------------
+
 def log_start(task: str, env: str, model: str) -> None:
     print(f"[START] task={task} env={env} model={model}", flush=True)
 
@@ -123,13 +110,12 @@ def log_end(success: bool, steps: int, score: float, rewards: List[float]) -> No
 # ---------------------------------------------------------------------------
 # HTTP helpers
 # ---------------------------------------------------------------------------
+
 def http_post(path: str, body: dict) -> dict:
     data = json.dumps(body).encode()
     req = urllib.request.Request(
-        f"{SPACE_URL}{path}",
-        data=data,
-        headers={"Content-Type": "application/json"},
-        method="POST",
+        f"{SPACE_URL}{path}", data=data,
+        headers={"Content-Type": "application/json"}, method="POST",
     )
     with urllib.request.urlopen(req, timeout=30) as resp:
         return json.loads(resp.read())
@@ -138,13 +124,13 @@ def http_post(path: str, body: dict) -> dict:
 # ---------------------------------------------------------------------------
 # Model resolution — probe proxy for a working model
 # ---------------------------------------------------------------------------
+
 def _resolve_model_candidates(client: Any) -> List[str]:
     candidates: List[str] = []
     if MODEL_NAME:
         candidates.append(MODEL_NAME)
     try:
-        models = client.models.list()
-        for item in getattr(models, "data", []) or []:
+        for item in getattr(client.models.list(), "data", []) or []:
             mid = getattr(item, "id", "")
             if mid and mid not in candidates:
                 candidates.append(str(mid))
@@ -152,6 +138,7 @@ def _resolve_model_candidates(client: Any) -> List[str]:
                     break
     except Exception:
         pass
+    # Hardcoded fallbacks if proxy returns nothing
     for fallback in ["Qwen/Qwen2.5-72B-Instruct", "google/gemma-3-27b-it", "gpt-4o-mini", "gpt-4o"]:
         if fallback not in candidates:
             candidates.append(fallback)
@@ -159,15 +146,13 @@ def _resolve_model_candidates(client: Any) -> List[str]:
 
 
 def _resolve_working_model(client: Any) -> str:
+    """Try each candidate model with a test call; return the first that responds."""
     last_err: Exception | None = None
     for model_name in _resolve_model_candidates(client):
         try:
             client.chat.completions.create(
                 model=model_name, temperature=0, max_tokens=1,
-                messages=[
-                    {"role": "system", "content": "Reply with one word."},
-                    {"role": "user", "content": "ping"},
-                ],
+                messages=[{"role": "system", "content": "Reply with one word."}, {"role": "user", "content": "ping"}],
             )
             return model_name
         except Exception as exc:
@@ -176,17 +161,16 @@ def _resolve_working_model(client: Any) -> str:
 
 
 # ---------------------------------------------------------------------------
-# LLM call
+# LLM call with rate-limit retry
 # ---------------------------------------------------------------------------
+
 def call_llm(client: Any, model_name: str, messages: list) -> str:
     for attempt in range(5):
         try:
             response = client.chat.completions.create(
-                model=model_name,
-                messages=messages,
+                model=model_name, messages=messages,
                 response_format={"type": "json_object"},
-                temperature=TEMPERATURE,
-                seed=42,
+                temperature=TEMPERATURE, seed=42,
             )
             return response.choices[0].message.content or ""
         except Exception as e:
@@ -198,8 +182,9 @@ def call_llm(client: Any, model_name: str, messages: list) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Observation formatter
+# Observation → text for LLM
 # ---------------------------------------------------------------------------
+
 def build_user_message(obs: dict, last_feedback: Optional[str]) -> str:
     lines = [
         f"task_id: {obs['task_id']}",
@@ -212,31 +197,30 @@ def build_user_message(obs: dict, last_feedback: Optional[str]) -> str:
         "\ntransactions:",
     ]
     for t in obs["transactions"]:
-        lines.append(
-            f"  [{t['id']}] {t['date']} | {t['source']} | {t['description']} | Rs{t['amount']}"
-        )
+        lines.append(f"  [{t['id']}] {t['date']} | {t['source']} | {t['description']} | Rs{t['amount']}")
     if last_feedback:
         lines.append(f"\nlast_feedback: {last_feedback}")
     return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
-# Main episode loop
+# Episode loop
 # ---------------------------------------------------------------------------
+
 def main() -> None:
     from openai import OpenAI
 
-    rewards:     List[float] = []
-    steps_taken: int         = 0
-    final_score: float       = 0.0
-    success:     bool        = False
-    emitted_step: bool       = False
+    rewards:      List[float] = []
+    steps_taken:  int         = 0
+    final_score:  float       = 0.0
+    success:      bool        = False
+    emitted_step: bool        = False
 
     log_start(task=TASK_NAME, env=BENCHMARK, model=MODEL_NAME or "auto")
 
     try:
         if not API_KEY:
-            raise RuntimeError("No API key found. Set API_KEY or HF_TOKEN.")
+            raise RuntimeError("No API key. Set API_KEY or HF_TOKEN.")
 
         client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
         model_name = _resolve_working_model(client)
@@ -248,8 +232,7 @@ def main() -> None:
         obs = http_post("/reset", {"task_id": TASK_NAME})
 
         for step in range(1, max_steps + 1):
-            user_msg = build_user_message(obs, last_feedback)
-            messages.append({"role": "user", "content": user_msg})
+            messages.append({"role": "user", "content": build_user_message(obs, last_feedback)})
 
             error: Optional[str] = None
             action_str = "{}"
@@ -268,16 +251,16 @@ def main() -> None:
                 action_str = json.dumps(action)
 
             try:
-                result = http_post("/step", action)
-                reward_obj  = result.get("reward") or {}
-                obs         = result.get("observation") or result
-                done        = bool(result.get("done", False))
-                reward      = float(reward_obj.get("score", 0.0)) if isinstance(reward_obj, dict) else float(reward_obj or 0.0)
+                result       = http_post("/step", action)
+                reward_obj   = result.get("reward") or {}
+                obs          = result.get("observation") or result
+                done         = bool(result.get("done", False))
+                reward       = float(reward_obj.get("score", 0.0)) if isinstance(reward_obj, dict) else float(reward_obj or 0.0)
                 last_feedback = reward_obj.get("feedback") if isinstance(reward_obj, dict) else None
-                final_score   = float(reward_obj.get("cumulative_score", final_score)) if isinstance(reward_obj, dict) else final_score
+                final_score  = float(reward_obj.get("cumulative_score", final_score)) if isinstance(reward_obj, dict) else final_score
             except Exception as exc:
                 error = str(exc)
-                done  = True
+                done = True
 
             rewards.append(reward)
             steps_taken = step

@@ -1,38 +1,362 @@
 [
-  {"id": "t2h01", "source": "HDFC_CC", "description": "ZOMATO*ORDER 9982",         "amount": 450.0,    "date": "2024-01-05", "correct_category": "Food & Dining",                  "is_cc_settlement": false},
-  {"id": "t2h02", "source": "HDFC_CC", "description": "SWIGGY*FOOD 3341",           "amount": 320.0,    "date": "2024-01-08", "correct_category": "Food & Dining",                  "is_cc_settlement": false},
-  {"id": "t2h03", "source": "HDFC_CC", "description": "AMAZON FASHION",             "amount": 2200.0,   "date": "2024-01-10", "correct_category": "Shopping & Apparel",              "is_cc_settlement": false},
-  {"id": "t2h04", "source": "HDFC_CC", "description": "BOOKMYSHOW* MUMBAI",         "amount": 640.0,    "date": "2024-01-12", "correct_category": "Entertainment & Subscriptions",   "is_cc_settlement": false},
-  {"id": "t2h05", "source": "HDFC_CC", "description": "IRCTC E-TICKET 8812",        "amount": 1850.0,   "date": "2024-01-14", "correct_category": "Transport & Commute",             "is_cc_settlement": false},
-  {"id": "t2h06", "source": "HDFC_CC", "description": "APOLLO PHARMACY 224",        "amount": 950.0,    "date": "2024-01-16", "correct_category": "Healthcare",                      "is_cc_settlement": false},
-  {"id": "t2h07", "source": "HDFC_CC", "description": "MYNTRA FASHION",             "amount": 3100.0,   "date": "2024-01-18", "correct_category": "Shopping & Apparel",              "is_cc_settlement": false},
-  {"id": "t2h08", "source": "HDFC_CC", "description": "NETFLIX INDIA",              "amount": 649.0,    "date": "2024-01-22", "correct_category": "Entertainment & Subscriptions",   "is_cc_settlement": false},
-  {"id": "t2h09", "source": "HDFC_CC", "description": "OLA CABS MUMBAI",            "amount": 340.0,    "date": "2024-01-24", "correct_category": "Transport & Commute",             "is_cc_settlement": false},
-  {"id": "t2h10", "source": "HDFC_CC", "description": "DOMINOS INDIA 7821",         "amount": 560.0,    "date": "2024-01-28", "correct_category": "Food & Dining",                  "is_cc_settlement": false},
-  {"id": "t2s01", "source": "SBI_SAVINGS", "description": "SALARY CR TATA CONSULTANCY", "amount": -85000.0, "date": "2024-01-01", "correct_category": "Savings & Investment",     "is_cc_settlement": false},
-  {"id": "t2s02", "source": "SBI_SAVINGS", "description": "HDFC HOME LOAN EMI",     "amount": 12000.0,  "date": "2024-01-06", "correct_category": "EMI & Loan Repayment",            "is_cc_settlement": false},
-  {"id": "t2s03", "source": "SBI_SAVINGS", "description": "BESCOM ELECTRICITY BILL","amount": 1200.0,   "date": "2024-01-20", "correct_category": "Utilities & Bills",               "is_cc_settlement": false},
-  {"id": "t2u01", "source": "PAYTM_UPI",  "description": "RAPIDO BIKE 44XD",        "amount": 65.0,     "date": "2024-01-09", "correct_category": "Transport & Commute",             "is_cc_settlement": false},
-  {"id": "t2u02", "source": "PAYTM_UPI",  "description": "JIO MOBILE RECHARGE",     "amount": 239.0,    "date": "2024-01-25", "correct_category": "Utilities & Bills",               "is_cc_settlement": false},
-  {"id": "t2s04", "source": "SBI_SAVINGS", "description": "SALARY CR TATA CONSULTANCY", "amount": -85000.0, "date": "2024-02-01", "correct_category": "Savings & Investment",     "is_cc_settlement": false},
-  {"id": "t2s05", "source": "SBI_SAVINGS", "description": "HDFC CREDIT CARD PAYMENT", "amount": 11059.0, "date": "2024-02-05", "correct_category": "Other",                        "is_cc_settlement": true},
-  {"id": "t2s06", "source": "SBI_SAVINGS", "description": "HDFC HOME LOAN EMI",     "amount": 12000.0,  "date": "2024-02-07", "correct_category": "EMI & Loan Repayment",            "is_cc_settlement": false},
-  {"id": "t2h11", "source": "HDFC_CC", "description": "ZOMATO*ORDER 4421",          "amount": 380.0,    "date": "2024-02-08", "correct_category": "Food & Dining",                  "is_cc_settlement": false},
-  {"id": "t2h12", "source": "HDFC_CC", "description": "BIG BAZAAR MUMBAI",          "amount": 2400.0,   "date": "2024-02-10", "correct_category": "Food & Dining",                  "is_cc_settlement": false},
-  {"id": "t2h13", "source": "HDFC_CC", "description": "AJIO FASHION",               "amount": 1600.0,   "date": "2024-02-14", "correct_category": "Shopping & Apparel",              "is_cc_settlement": false},
-  {"id": "t2h14", "source": "HDFC_CC", "description": "SPOTIFY PREMIUM",            "amount": 119.0,    "date": "2024-02-15", "correct_category": "Entertainment & Subscriptions",   "is_cc_settlement": false},
-  {"id": "t2h15", "source": "HDFC_CC", "description": "PRACTO ONLINE CONSULT",      "amount": 800.0,    "date": "2024-02-20", "correct_category": "Healthcare",                      "is_cc_settlement": false},
-  {"id": "t2h16", "source": "HDFC_CC", "description": "SWIGGY FOOD 8812",           "amount": 450.0,    "date": "2024-02-22", "correct_category": "Food & Dining",                  "is_cc_settlement": false},
-  {"id": "t2u03", "source": "PAYTM_UPI",  "description": "OLA AUTO 89XZ",           "amount": 120.0,    "date": "2024-02-12", "correct_category": "Transport & Commute",             "is_cc_settlement": false},
-  {"id": "t2u04", "source": "PAYTM_UPI",  "description": "MSEDCL ELECTRICITY BILL", "amount": 1100.0,   "date": "2024-02-18", "correct_category": "Utilities & Bills",               "is_cc_settlement": false},
-  {"id": "t2s07", "source": "SBI_SAVINGS", "description": "SALARY CR TATA CONSULTANCY", "amount": -85000.0, "date": "2024-03-01", "correct_category": "Savings & Investment",     "is_cc_settlement": false},
-  {"id": "t2s08", "source": "SBI_SAVINGS", "description": "HDFC CREDIT CARD PAYMENT", "amount": 5749.0,  "date": "2024-03-05", "correct_category": "Other",                        "is_cc_settlement": true},
-  {"id": "t2s09", "source": "SBI_SAVINGS", "description": "HDFC HOME LOAN EMI",     "amount": 12000.0,  "date": "2024-03-07", "correct_category": "EMI & Loan Repayment",            "is_cc_settlement": false},
-  {"id": "t2h17", "source": "HDFC_CC", "description": "ZOMATO GOLD 7712",           "amount": 430.0,    "date": "2024-03-10", "correct_category": "Food & Dining",                  "is_cc_settlement": false},
-  {"id": "t2h18", "source": "HDFC_CC", "description": "AMAZON SHOPPING",            "amount": 3200.0,   "date": "2024-03-12", "correct_category": "Shopping & Apparel",              "is_cc_settlement": false},
-  {"id": "t2h19", "source": "HDFC_CC", "description": "PVR CINEMAS MUMBAI",         "amount": 720.0,    "date": "2024-03-15", "correct_category": "Entertainment & Subscriptions",   "is_cc_settlement": false},
-  {"id": "t2h20", "source": "HDFC_CC", "description": "DECATHLON SPORTS",           "amount": 2800.0,   "date": "2024-03-18", "correct_category": "Shopping & Apparel",              "is_cc_settlement": false},
-  {"id": "t2h21", "source": "HDFC_CC", "description": "ZOMATO FOOD 3301",           "amount": 360.0,    "date": "2024-03-22", "correct_category": "Food & Dining",                  "is_cc_settlement": false},
-  {"id": "t2u05", "source": "PAYTM_UPI",  "description": "OLA RICKSHAW 55AB",       "amount": 85.0,     "date": "2024-03-08", "correct_category": "Transport & Commute",             "is_cc_settlement": false},
-  {"id": "t2u06", "source": "PAYTM_UPI",  "description": "BSNL BROADBAND BILL",     "amount": 299.0,    "date": "2024-03-25", "correct_category": "Utilities & Bills",               "is_cc_settlement": false}
+  {
+    "id": "t2h01",
+    "source": "HDFC_CC",
+    "description": "UPI-ZOMATO LIMITED  ",
+    "amount": 213.20,
+    "date": "2025-01-05",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h02",
+    "source": "HDFC_CC",
+    "description": "UPI-Swiggy Diners  ",
+    "amount": 829.00,
+    "date": "2025-01-07",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h03",
+    "source": "HDFC_CC",
+    "description": "UPI-Blinkit  ",
+    "amount": 906.83,
+    "date": "2025-01-08",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h04",
+    "source": "HDFC_CC",
+    "description": "UPI-DMART READY  ",
+    "amount": 1656.00,
+    "date": "2025-01-10",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h05",
+    "source": "HDFC_CC",
+    "description": "UPI-Myntra  ",
+    "amount": 60.00,
+    "date": "2025-01-12",
+    "correct_category": "Shopping & Apparel",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h06",
+    "source": "HDFC_CC",
+    "description": "UPI-Airtel  ",
+    "amount": 105.00,
+    "date": "2025-01-14",
+    "correct_category": "Utilities & Bills",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h07",
+    "source": "HDFC_CC",
+    "description": "UPI-CRED Store  ",
+    "amount": 349.00,
+    "date": "2025-01-17",
+    "correct_category": "Shopping & Apparel",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h08",
+    "source": "HDFC_CC",
+    "description": "UPI-EatClub  ",
+    "amount": 395.00,
+    "date": "2025-01-20",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h09",
+    "source": "HDFC_CC",
+    "description": "UPI-12233 Apollo Pharm acy ",
+    "amount": 142.30,
+    "date": "2025-01-22",
+    "correct_category": "Healthcare",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2s01",
+    "source": "SBI_SAVINGS",
+    "description": " DEP TFR   NEFT*HDFC0000240*HDFCH00030807343*INFOSYS\n BPO LTD   0098198044301 AT 21216BONDOLA GONDA",
+    "amount": -85000.0,
+    "date": "2025-01-01",
+    "correct_category": "Savings & Investment",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2s02",
+    "source": "SBI_SAVINGS",
+    "description": " DEBIT   ACHDr NACH000\n 00000056470 PRP552813",
+    "amount": 17651.0,
+    "date": "2025-01-05",
+    "correct_category": "EMI & Loan Repayment",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2s03",
+    "source": "SBI_SAVINGS",
+    "description": " WDL TFR   INB IMPS/502812580352/HDFC-xx972-HDFC CC\n PMT/   0097857162095 AT 21216BONDOLA GONDA",
+    "amount": 13722.0,
+    "date": "2025-01-27",
+    "correct_category": "Other",
+    "is_cc_settlement": true
+  },
+  {
+    "id": "t2c01",
+    "source": "CANARA_SAVINGS",
+    "description": "UPI/DR/283618761281/CAFE KAZ/INDB/**85171@INDUS/NA// PTM8AF595B3F519425B9A7686 9E4625D46A/22/01/2025 13:08:29",
+    "amount": 500.00,
+    "date": "2025-01-22",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2c02",
+    "source": "CANARA_SAVINGS",
+    "description": "UPI/DR/547495056001/RAPIDO RI/UTIB/**rapido@axis\n b/NA//ACD313380102612345/15/01/2025 09:15:44",
+    "amount": 65.00,
+    "date": "2025-01-15",
+    "correct_category": "Transport & Commute",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2c03",
+    "source": "CANARA_SAVINGS",
+    "description": "UPI/DR/529961588464/SPOTIFY I/ICIC/**.BDSI@ICICI/MANDATE R//ICI9D515DEE91354868BC20 53533F44F4CB/26/01/2025 17:21:13",
+    "amount": 119.00,
+    "date": "2025-01-26",
+    "correct_category": "Entertainment & Subscriptions",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h11",
+    "source": "HDFC_CC",
+    "description": "UPI-Raj market  ",
+    "amount": 80.00,
+    "date": "2025-02-05",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h12",
+    "source": "HDFC_CC",
+    "description": "UPI-Green fresh vegeta ble and ",
+    "amount": 690.00,
+    "date": "2025-02-07",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h13",
+    "source": "HDFC_CC",
+    "description": "UPI-ZOMATO  ",
+    "amount": 139.20,
+    "date": "2025-02-08",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h14",
+    "source": "HDFC_CC",
+    "description": "UPI-Blinkit  ",
+    "amount": 3154.34,
+    "date": "2025-02-10",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h15",
+    "source": "HDFC_CC",
+    "description": "UPI-MASTER CRAFT ENTER PR ",
+    "amount": 425.00,
+    "date": "2025-02-14",
+    "correct_category": "Shopping & Apparel",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h16",
+    "source": "HDFC_CC",
+    "description": "UPI-Airtel  ",
+    "amount": 105.00,
+    "date": "2025-02-17",
+    "correct_category": "Utilities & Bills",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h17",
+    "source": "HDFC_CC",
+    "description": "UPI-EatClub  ",
+    "amount": 328.00,
+    "date": "2025-02-20",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h18",
+    "source": "HDFC_CC",
+    "description": "UPI-Innovative Retail Concept ",
+    "amount": 931.70,
+    "date": "2025-02-24",
+    "correct_category": "Shopping & Apparel",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2s04",
+    "source": "SBI_SAVINGS",
+    "description": " DEP TFR   NEFT*HDFC0000240*HDFCH00084415820*INFOSYS\n BPO LTD   0097179044302 AT 21216BONDOLA GONDA",
+    "amount": -85000.0,
+    "date": "2025-02-01",
+    "correct_category": "Savings & Investment",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2s05",
+    "source": "SBI_SAVINGS",
+    "description": " DEBIT   ACHDr NACH000\n 00000056470 PRP552813",
+    "amount": 17651.0,
+    "date": "2025-02-05",
+    "correct_category": "EMI & Loan Repayment",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2s06",
+    "source": "SBI_SAVINGS",
+    "description": " WDL TFR   IMPS/505819731929/HDFC-xx972-HDFC CC\n PMT/   0098292162098 AT 21216BONDOLA GONDA",
+    "amount": 8745.0,
+    "date": "2025-02-27",
+    "correct_category": "Other",
+    "is_cc_settlement": true
+  },
+  {
+    "id": "t2c04",
+    "source": "CANARA_SAVINGS",
+    "description": "UPI/DR/109460039001/JIO MOBIL/RJIO/**.JIO@RELIAJ/NA//JIO3F64A53 4C3E4D1A8F9B2C7E1D5A/11/02/2025 10:30:00",
+    "amount": 299.00,
+    "date": "2025-02-11",
+    "correct_category": "Utilities & Bills",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2c05",
+    "source": "CANARA_SAVINGS",
+    "description": "UPI/DR/283424130665/ANI TECHN/CNRB/**ola@okicici /NA//PTMCEDDDDD4E8554E38BA 7F1D7A067BEC/15/02/2025 08:45:22",
+    "amount": 120.00,
+    "date": "2025-02-15",
+    "correct_category": "Transport & Commute",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2c06",
+    "source": "CANARA_SAVINGS",
+    "description": "UPI/DR/529961588465/SPOTIFY I/ICIC/**.BDSI@ICICI/MANDATE R//ICI9D515DEE91354868BC20 53533F44F4CB/26/02/2025 17:21:13",
+    "amount": 119.00,
+    "date": "2025-02-26",
+    "correct_category": "Entertainment & Subscriptions",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h20",
+    "source": "HDFC_CC",
+    "description": "UPI-DMART READY  ",
+    "amount": 967.00,
+    "date": "2025-03-01",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h21",
+    "source": "HDFC_CC",
+    "description": "Swiggy Bengaluru ",
+    "amount": 2770.00,
+    "date": "2025-03-05",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h22",
+    "source": "HDFC_CC",
+    "description": "UPI-12233 Apollo Pharm acy ",
+    "amount": 142.30,
+    "date": "2025-03-08",
+    "correct_category": "Healthcare",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h23",
+    "source": "HDFC_CC",
+    "description": "UPI-M/S.NEW POPULAR ST ATIONER ",
+    "amount": 266.00,
+    "date": "2025-03-10",
+    "correct_category": "Shopping & Apparel",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2h24",
+    "source": "HDFC_CC",
+    "description": "UPI-HEALTH GREENS  ",
+    "amount": 276.00,
+    "date": "2025-03-12",
+    "correct_category": "Food & Dining",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2s07",
+    "source": "SBI_SAVINGS",
+    "description": " DEP TFR   NEFT*HDFC0000240*HDFCH00147615154*INFOSYS\n BPO LTD   0099509044300 AT 21216BONDOLA GONDA",
+    "amount": -85000.0,
+    "date": "2025-03-01",
+    "correct_category": "Savings & Investment",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2s08",
+    "source": "SBI_SAVINGS",
+    "description": " DEBIT   ACHDr NACH000\n 00000056470 PRP552813",
+    "amount": 17321.0,
+    "date": "2025-03-05",
+    "correct_category": "EMI & Loan Repayment",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2s09",
+    "source": "SBI_SAVINGS",
+    "description": " WDL TFR   IMPS/508417989983/HDFC-xx972-HDFC CC\n PMT/   0098288162094 AT 21216BONDOLA GONDA",
+    "amount": 7873.0,
+    "date": "2025-03-25",
+    "correct_category": "Other",
+    "is_cc_settlement": true
+  },
+  {
+    "id": "t2c07",
+    "source": "CANARA_SAVINGS",
+    "description": "UPI/DR/100363233735/APPLE MED/HDFC/**.BDSI@HDFCBAN K/UPI MAND//HDF32C342D1BCC10B3 9E0634FCEE10AEB2B/15/03/2025 03:42:13",
+    "amount": 29.00,
+    "date": "2025-03-15",
+    "correct_category": "Healthcare",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2c08",
+    "source": "CANARA_SAVINGS",
+    "description": "UPI/DR/100345212345/BSNL BROA/BSNL/**.bsnl@bsnl/BROADBAN//BSN45678901 2345678901234567890/20/03/2025 11:00:00",
+    "amount": 299.00,
+    "date": "2025-03-20",
+    "correct_category": "Utilities & Bills",
+    "is_cc_settlement": false
+  },
+  {
+    "id": "t2c09",
+    "source": "CANARA_SAVINGS",
+    "description": "UPI/DR/529961588466/SPOTIFY I/ICIC/**.BDSI@ICICI/MANDATE R//ICI9D515DEE91354868BC20 53533F44F4CB/26/03/2025 17:21:15",
+    "amount": 119.00,
+    "date": "2025-03-26",
+    "correct_category": "Entertainment & Subscriptions",
+    "is_cc_settlement": false
+  }
 ]
